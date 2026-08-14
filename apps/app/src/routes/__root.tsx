@@ -1,3 +1,4 @@
+import { SolarProvider } from "@solar-icons/react";
 import { Outlet, createRootRoute } from "@tanstack/react-router";
 
 export const Route = createRootRoute({
@@ -6,8 +7,10 @@ export const Route = createRootRoute({
 
 function RootLayout() {
   return (
-    <div className="min-h-screen bg-surface text-ink">
-      <Outlet />
-    </div>
+    <SolarProvider color="currentColor" size={20} strokeWidth={1.5}>
+      <div className="min-h-screen bg-surface text-ink">
+        <Outlet />
+      </div>
+    </SolarProvider>
   );
 }

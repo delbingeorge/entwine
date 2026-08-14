@@ -12,9 +12,12 @@
     "typecheck": "pnpm routes && tsc --noEmit"
   },
   "dependencies": {
+    "@solar-icons/react": "^2.0.0",
     "@tanstack/react-router": "^1.95.1",
+    "clsx": "^2.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.6.0",
     "zod": "^4.0.5"
   },
   "devDependencies": {
