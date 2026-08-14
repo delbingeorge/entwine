@@ -1,0 +1,8 @@
+{
+  "name": "@entwine/server",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "go run ./cmd/api"
+  }
+}

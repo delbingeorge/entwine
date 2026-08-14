@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.next/
+.turbo/
+*.tsbuildinfo
+
+apps/app/src/route-tree.gen.ts
+
+.env
+.env.*
+!.env.example
+
+server/bin/
+server/coverage.out
+
+.DS_Store
+*.log

@@ -1,0 +1,85 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - depguard
+    - gosec
+    - bodyclose
+    - errorlint
+    - noctx
+
+  settings:
+    depguard:
+      rules:
+        domain:
+          files:
+            - "**/internal/domain/**"
+          list-mode: strict
+          allow:
+            - $gostd
+            - github.com/octane/entwine/server/internal/domain
+
+        usecase:
+          files:
+            - "**/internal/usecase/**"
+          deny:
+            - pkg: github.com/octane/entwine/server/internal/storage
+              desc: usecases depend on ports they declare themselves, never on storage
+            - pkg: github.com/octane/entwine/server/internal/system
+              desc: usecases depend on ports they declare themselves, never on system
+            - pkg: github.com/octane/entwine/server/internal/transport
+              desc: dependencies point inward; transport calls usecase, not the reverse
+            - pkg: gorm.io
+              desc: GORM is confined to internal/storage/postgres
+
+        storage:
+          files:
+            - "**/internal/storage/**"
+          deny:
+            - pkg: github.com/octane/entwine/server/internal/transport
+              desc: storage never reaches back into transport
+            - pkg: net/http
+              desc: storage is not an HTTP layer
+
+        system:
+          files:
+            - "**/internal/system/**"
+          deny:
+            - pkg: github.com/octane/entwine/server/internal/storage
+              desc: system adapters talk to domain and their own ports, not storage
+            - pkg: github.com/octane/entwine/server/internal/transport
+              desc: system adapters never reach back into transport
+            - pkg: gorm.io
+              desc: GORM is confined to internal/storage/postgres
+
+        transport:
+          files:
+            - "**/internal/transport/**"
+          deny:
+            - pkg: github.com/octane/entwine/server/internal/storage
+              desc: transport talks to usecases, which own their storage ports
+            - pkg: gorm.io
+              desc: GORM is confined to internal/storage/postgres
+
+        no-cmd-imports:
+          files:
+            - "!**/cmd/**"
+          deny:
+            - pkg: github.com/octane/entwine/server/cmd
+              desc: nothing imports cmd
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/octane/entwine/server
