@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: entwine-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: entwine
+      POSTGRES_PASSWORD: entwine
+      POSTGRES_DB: entwine
+    ports:
+      - "5432:5432"
+    volumes:
+      - entwine-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U entwine -d entwine"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  entwine-pgdata:

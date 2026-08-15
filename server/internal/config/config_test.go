@@ -8,7 +8,17 @@ import (
 	"github.com/octane/entwine/server/internal/config"
 )
 
-func TestLoad(t *testing.T) {
+func setRequired(t *testing.T) {
+	t.Helper()
+
+	t.Setenv("DATABASE_URL", "postgres://entwine:entwine@localhost:5432/entwine?sslmode=disable")
+	t.Setenv("SUPABASE_JWKS_URL", "https://project.supabase.co/auth/v1/.well-known/jwks.json")
+	t.Setenv("SUPABASE_JWT_ISSUER", "https://project.supabase.co/auth/v1")
+	t.Setenv("SUPABASE_JWT_AUDIENCE", "authenticated")
+	t.Setenv("APP_ORIGIN", "http://localhost:5173")
+}
+
+func TestLoadPort(t *testing.T) {
 	tests := []struct {
 		name     string
 		port     string
@@ -25,6 +35,8 @@ func TestLoad(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			setRequired(t)
+
 			// t.Setenv first so its cleanup restores the ambient value.
 			t.Setenv("PORT", test.port)
 			if test.unset {
@@ -50,5 +62,41 @@ func TestLoad(t *testing.T) {
 				t.Errorf("got port %d, want %d", got.Port, test.wantPort)
 			}
 		})
+	}
+}
+
+func TestLoadRequiresSecrets(t *testing.T) {
+	for _, key := range []string{
+		"DATABASE_URL",
+		"SUPABASE_JWKS_URL",
+		"SUPABASE_JWT_ISSUER",
+		"SUPABASE_JWT_AUDIENCE",
+		"APP_ORIGIN",
+	} {
+		t.Run("missing "+key, func(t *testing.T) {
+			setRequired(t)
+			t.Setenv(key, "")
+
+			if _, err := config.Load(); !errors.Is(err, config.ErrInvalidConfig) {
+				t.Fatalf("got error %v, want %v", err, config.ErrInvalidConfig)
+			}
+		})
+	}
+}
+
+func TestLoadReadsSupabaseSettings(t *testing.T) {
+	setRequired(t)
+
+	got, err := config.Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if got.SupabaseJWTAudience != "authenticated" {
+		t.Errorf("got audience %q, want %q", got.SupabaseJWTAudience, "authenticated")
+	}
+
+	if got.DatabaseURL == "" {
+		t.Error("got empty database url")
 	}
 }

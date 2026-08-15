@@ -14,7 +14,10 @@ import (
 	"time"
 
 	"github.com/octane/entwine/server/internal/config"
+	"github.com/octane/entwine/server/internal/storage/postgres"
+	"github.com/octane/entwine/server/internal/system/supabase"
 	transporthttp "github.com/octane/entwine/server/internal/transport/http"
+	"github.com/octane/entwine/server/internal/usecase/identity"
 )
 
 func main() {
@@ -32,14 +35,32 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("load config: %w", err)
 	}
 
-	server := &http.Server{
-		Addr:              net.JoinHostPort("", strconv.Itoa(cfg.Port)),
-		Handler:           transporthttp.NewRouter(logger),
-		ReadHeaderTimeout: 5 * time.Second,
-	}
-
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	db, err := postgres.Open(cfg.DatabaseURL)
+	if err != nil {
+		return fmt.Errorf("open database: %w", err)
+	}
+
+	defer func() {
+		if closeErr := postgres.Close(db); closeErr != nil {
+			logger.Error("close database", slog.Any("error", closeErr))
+		}
+	}()
+
+	verifier, err := supabase.NewVerifier(ctx, cfg.SupabaseJWKSURL, cfg.SupabaseJWTIssuer, cfg.SupabaseJWTAudience)
+	if err != nil {
+		return fmt.Errorf("build token verifier: %w", err)
+	}
+
+	users := identity.NewService(postgres.NewUserRepo(db), time.Now)
+
+	server := &http.Server{
+		Addr:              net.JoinHostPort("", strconv.Itoa(cfg.Port)),
+		Handler:           transporthttp.NewRouter(logger, verifier, users, cfg.AppOrigin),
+		ReadHeaderTimeout: 5 * time.Second,
+	}
 
 	errs := make(chan error, 1)
 

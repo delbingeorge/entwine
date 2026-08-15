@@ -26,6 +26,8 @@ jobs:
       - run: pnpm build
         env:
           VITE_API_URL: http://localhost:8080
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci
           NEXT_PUBLIC_APP_URL: http://localhost:5173
 
   server:
@@ -33,6 +35,23 @@ jobs:
     defaults:
       run:
         working-directory: server
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: entwine
+          POSTGRES_PASSWORD: entwine
+          POSTGRES_DB: entwine
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U entwine -d entwine"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://entwine:entwine@localhost:5432/entwine?sslmode=disable
+      TEST_DATABASE_URL: postgres://entwine:entwine@localhost:5432/entwine?sslmode=disable
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -45,4 +64,5 @@ jobs:
         with:
           version: v2.6.2
           working-directory: server
+      - run: make migrate-up
       - run: go test -race ./...

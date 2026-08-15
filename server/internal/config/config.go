@@ -9,8 +9,13 @@ import (
 )
 
 type Config struct {
-	Port            int
-	ShutdownTimeout time.Duration
+	Port                int
+	DatabaseURL         string
+	SupabaseJWKSURL     string
+	SupabaseJWTIssuer   string
+	SupabaseJWTAudience string
+	AppOrigin           string
+	ShutdownTimeout     time.Duration
 }
 
 const (
@@ -31,10 +36,49 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("PORT %d out of range 1-%d: %w", port, maxPort, ErrInvalidConfig)
 	}
 
+	databaseURL, err := stringFromEnv("DATABASE_URL")
+	if err != nil {
+		return Config{}, err
+	}
+
+	jwksURL, err := stringFromEnv("SUPABASE_JWKS_URL")
+	if err != nil {
+		return Config{}, err
+	}
+
+	issuer, err := stringFromEnv("SUPABASE_JWT_ISSUER")
+	if err != nil {
+		return Config{}, err
+	}
+
+	audience, err := stringFromEnv("SUPABASE_JWT_AUDIENCE")
+	if err != nil {
+		return Config{}, err
+	}
+
+	appOrigin, err := stringFromEnv("APP_ORIGIN")
+	if err != nil {
+		return Config{}, err
+	}
+
 	return Config{
-		Port:            port,
-		ShutdownTimeout: defaultShutdownTimeout,
+		Port:                port,
+		DatabaseURL:         databaseURL,
+		SupabaseJWKSURL:     jwksURL,
+		SupabaseJWTIssuer:   issuer,
+		SupabaseJWTAudience: audience,
+		AppOrigin:           appOrigin,
+		ShutdownTimeout:     defaultShutdownTimeout,
 	}, nil
+}
+
+func stringFromEnv(key string) (string, error) {
+	value, ok := os.LookupEnv(key)
+	if !ok || value == "" {
+		return "", fmt.Errorf("%s is required: %w", key, ErrInvalidConfig)
+	}
+
+	return value, nil
 }
 
 func intFromEnv(key string, fallback int) (int, error) {

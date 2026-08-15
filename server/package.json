@@ -3,6 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "go run ./cmd/api"
+    "dev": "sh -c 'set -a; [ -f .env ] && . ./.env; set +a; exec go run ./cmd/api'"
   }
 }
