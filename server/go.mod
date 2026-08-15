@@ -5,6 +5,7 @@ go 1.26
 require (
 	github.com/lestrrat-go/httprc/v3 v3.0.6
 	github.com/lestrrat-go/jwx/v3 v3.2.0
+	github.com/lib/pq v1.12.3
 	gorm.io/driver/postgres v1.6.2
 	gorm.io/gorm v1.31.2
 )

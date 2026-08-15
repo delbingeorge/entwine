@@ -50,7 +50,16 @@ func (f *fakeEnsurer) Ensure(_ context.Context, _ domain.Identity) (domain.User,
 const testOrigin = "http://localhost:5173"
 
 func newTestRouter(verifier transporthttp.TokenVerifier, users transporthttp.UserEnsurer) http.Handler {
-	return transporthttp.NewRouter(slog.New(slog.DiscardHandler), verifier, users, testOrigin)
+	return transporthttp.NewRouter(
+		slog.New(slog.DiscardHandler), verifier, users, &fakeProfiles{}, testOrigin)
+}
+
+func newProfileRouter(profiles transporthttp.ProfileService) http.Handler {
+	verifier := &fakeVerifier{identity: domain.Identity{ID: "sub-1", Email: "dev@entwine.dev"}}
+	users := &fakeEnsurer{user: domain.User{ID: "sub-1", Email: "dev@entwine.dev"}}
+
+	return transporthttp.NewRouter(
+		slog.New(slog.DiscardHandler), verifier, users, profiles, testOrigin)
 }
 
 func TestHealthNeedsNoToken(t *testing.T) {

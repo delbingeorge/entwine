@@ -13,12 +13,20 @@ type meResponse struct {
 	IsNew     bool      `json:"isNew"`
 }
 
-func NewRouter(logger *slog.Logger, verifier TokenVerifier, users UserEnsurer, allowedOrigin string) http.Handler {
+func NewRouter(
+	logger *slog.Logger,
+	verifier TokenVerifier,
+	users UserEnsurer,
+	profiles ProfileService,
+	allowedOrigin string,
+) http.Handler {
 	mux := http.NewServeMux()
 	authenticated := requireUser(logger, verifier, users)
 
 	mux.HandleFunc("GET /v1/health", handleHealth(logger))
 	mux.Handle("GET /v1/me", authenticated(handleMe(logger)))
+	mux.Handle("GET /v1/profile", authenticated(handleGetProfile(logger, profiles)))
+	mux.Handle("PUT /v1/profile", authenticated(handlePutProfile(logger, profiles)))
 
 	return withCORS(allowedOrigin)(mux)
 }

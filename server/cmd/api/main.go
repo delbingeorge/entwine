@@ -18,6 +18,7 @@ import (
 	"github.com/octane/entwine/server/internal/system/supabase"
 	transporthttp "github.com/octane/entwine/server/internal/transport/http"
 	"github.com/octane/entwine/server/internal/usecase/identity"
+	"github.com/octane/entwine/server/internal/usecase/profile"
 )
 
 func main() {
@@ -55,10 +56,11 @@ func run(logger *slog.Logger) error {
 	}
 
 	users := identity.NewService(postgres.NewUserRepo(db), time.Now)
+	profiles := profile.NewService(postgres.NewCandidateProfileRepo(db), time.Now)
 
 	server := &http.Server{
 		Addr:              net.JoinHostPort("", strconv.Itoa(cfg.Port)),
-		Handler:           transporthttp.NewRouter(logger, verifier, users, cfg.AppOrigin),
+		Handler:           transporthttp.NewRouter(logger, verifier, users, profiles, cfg.AppOrigin),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
