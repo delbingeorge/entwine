@@ -4,6 +4,7 @@ import { streamChat } from "@/shared/lib/chat-api";
 import { getThreadMessages } from "@/shared/lib/thread-api";
 
 import { renderMarkdown } from "../lib/render-markdown";
+import { createReveal } from "../lib/reveal";
 
 import type { Attachment, Turn, UserTurn } from "../types";
 
@@ -21,10 +22,12 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
   const [editing, setEditing] = useState<number | null>(null);
   const nextId = useRef(1000);
   const abort = useRef<AbortController | null>(null);
+  const revealRef = useRef<ReturnType<typeof createReveal> | null>(null);
 
   useEffect(
     () => () => {
       abort.current?.abort();
+      revealRef.current?.kill();
     },
     [],
   );
@@ -87,6 +90,18 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
     let markdown = "";
     let hasStarted = false;
 
+    const reveal = createReveal((count) => {
+      setTurns((current) =>
+        current.map((turn) =>
+          turn.id === agentId && turn.role === "agent"
+            ? { ...turn, html: renderMarkdown(markdown.slice(0, count)) }
+            : turn,
+        ),
+      );
+    });
+
+    revealRef.current = reveal;
+
     try {
       await streamChat({
         text,
@@ -103,15 +118,11 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
             ]);
           }
 
-          setTurns((current) =>
-            current.map((turn) =>
-              turn.id === agentId && turn.role === "agent"
-                ? { ...turn, html: renderMarkdown(markdown) }
-                : turn,
-            ),
-          );
+          reveal.to(markdown.length);
         },
       });
+
+      await reveal.settle(markdown.length);
 
       setTurns((current) =>
         current
@@ -121,6 +132,8 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
           ),
       );
     } catch (cause) {
+      reveal.kill();
+
       if (controller.signal.aborted) {
         return;
       }
@@ -143,6 +156,7 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
 
   const stop = () => {
     abort.current?.abort();
+    revealRef.current?.kill();
     setTurns((current) =>
       current
         .filter((turn) => turn.role !== "thinking")
