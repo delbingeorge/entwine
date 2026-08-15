@@ -1,31 +1,46 @@
 import { useState } from "react";
 
+import { useNavigate } from "@tanstack/react-router";
+
 import { FadeSwap } from "@/shared/components/fade-swap";
 import { SplitLayout } from "@/shared/components/split-layout";
 
-import { DraftSummary } from "./draft-summary";
+import { useSaveProfile } from "../hooks/use-save-profile";
+import { emptyDraft, type ProfileDraft } from "../types";
+
 import { ManualForm } from "./manual-form";
 import { StepCounter } from "./step-counter";
 
-import type { ProfileDraft } from "../types";
-
 export const OnboardingScreen = () => {
-  const [draft, setDraft] = useState<ProfileDraft | null>(null);
+  const navigate = useNavigate();
+  const { hasFailed, isSaving, save } = useSaveProfile();
   const [step, setStep] = useState(1);
+  const [draft, setDraft] = useState<ProfileDraft>(emptyDraft);
 
-  const restart = () => {
-    setDraft(null);
-    setStep(1);
+  const patch = (change: Partial<ProfileDraft>) => {
+    setDraft((current) => ({ ...current, ...change }));
+  };
+
+  const finish = (completed: ProfileDraft) => {
+    void save(completed).then((saved) => {
+      if (saved) {
+        void navigate({ replace: true, to: "/" });
+      }
+    });
   };
 
   return (
-    <SplitLayout headerAside={draft === null ? <StepCounter step={step} /> : null} wide>
-      <FadeSwap swapKey={draft === null ? step : "summary"}>
-        {draft === null ? (
-          <ManualForm onDone={setDraft} onStepChange={setStep} step={step} />
-        ) : (
-          <DraftSummary draft={draft} onEdit={restart} />
-        )}
+    <SplitLayout headerAside={<StepCounter step={step} />} wide>
+      <FadeSwap swapKey={step}>
+        <ManualForm
+          draft={draft}
+          hasFailed={hasFailed}
+          isSaving={isSaving}
+          onDone={finish}
+          onDraftChange={patch}
+          onStepChange={setStep}
+          step={step}
+        />
       </FadeSwap>
     </SplitLayout>
   );

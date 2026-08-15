@@ -109,6 +109,7 @@ func handlePutProfile(logger *slog.Logger, profiles ProfileService) http.Handler
 			WantsToBuild:   body.WantsToBuild,
 		})
 		if errors.Is(err, domain.ErrInvalidProfile) {
+			logger.WarnContext(ctx, "rejected profile", slog.Any("error", err))
 			writeError(ctx, logger, w, http.StatusBadRequest, "invalid_profile", "That profile is not valid.")
 			return
 		}

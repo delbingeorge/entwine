@@ -1,27 +1,34 @@
-import { useState } from "react";
-
 import { useDisplayName } from "@/shared/hooks/use-display-name";
 
 import { locationOptions, seniorityOptions, stackOptions, totalManualSteps } from "../questions";
-import { emptyDraft, type ProfileDraft } from "../types";
 
 import { ChipGroup } from "./chip-group";
 import { SalaryField } from "./salary-field";
 import { StepShell } from "./step-shell";
 
+import type { ProfileDraft } from "../types";
+
 interface ManualFormProps {
+  draft: ProfileDraft;
+  hasFailed: boolean;
+  isSaving: boolean;
   onDone: (draft: ProfileDraft) => void;
+  onDraftChange: (change: Partial<ProfileDraft>) => void;
   onStepChange: (step: number) => void;
   step: number;
 }
 
-export const ManualForm = ({ onDone, onStepChange, step }: ManualFormProps) => {
-  const [draft, setDraft] = useState<ProfileDraft>(emptyDraft);
+export const ManualForm = ({
+  draft,
+  hasFailed,
+  isSaving,
+  onDone,
+  onDraftChange,
+  onStepChange,
+  step,
+}: ManualFormProps) => {
   const name = useDisplayName();
-
-  const patch = (change: Partial<ProfileDraft>) => {
-    setDraft((current) => ({ ...current, ...change }));
-  };
+  const patch = onDraftChange;
 
   const goBack = () => {
     onStepChange(step - 1);
@@ -119,10 +126,9 @@ export const ManualForm = ({ onDone, onStepChange, step }: ManualFormProps) => {
   return (
     <StepShell
       {...shell}
-      canContinue
-      onSkip={() => {
-        onDone({ ...draft, wantsToBuild: "" });
-      }}
+      canContinue={!isSaving}
+      continueLabel={isSaving ? "Saving…" : "Finish"}
+      error={hasFailed ? "We could not save that. Try again." : undefined}
       subtitle="One line is plenty. It sharpens every match."
       title="What do you want to work on next?"
     >

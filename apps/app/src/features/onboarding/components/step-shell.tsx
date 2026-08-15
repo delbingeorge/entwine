@@ -5,9 +5,10 @@ import { PageHeading } from "@/shared/components/page-heading";
 interface StepShellProps {
   canContinue: boolean;
   children: ReactNode;
+  continueLabel?: string;
+  error?: string;
   onBack: () => void;
   onContinue: () => void;
-  onSkip?: () => void;
   step: number;
   subtitle: string;
   title: string;
@@ -16,9 +17,10 @@ interface StepShellProps {
 export const StepShell = ({
   canContinue,
   children,
+  continueLabel = "Continue",
+  error,
   onBack,
   onContinue,
-  onSkip,
   step,
   subtitle,
   title,
@@ -35,18 +37,19 @@ export const StepShell = ({
         onClick={onContinue}
         type="button"
       >
-        Continue
+        {continueLabel}
       </button>
-      {onSkip === undefined ? null : (
-        <button className="text-sm text-ink-muted" onClick={onSkip} type="button">
-          Skip
-        </button>
-      )}
       {step === 1 ? null : (
         <button className="text-sm text-ink-muted" onClick={onBack} type="button">
           Back
         </button>
       )}
     </div>
+
+    {error === undefined ? null : (
+      <p className="mt-4 text-sm text-ink-muted" role="alert">
+        {error}
+      </p>
+    )}
   </section>
 );

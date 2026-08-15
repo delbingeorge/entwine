@@ -4,7 +4,7 @@ import { saveProfile } from "../api/save-profile";
 
 import type { ProfileDraft } from "../types";
 
-type SaveState = "idle" | "saving" | "saved" | "failed";
+type SaveState = "idle" | "saving" | "failed";
 
 export const useSaveProfile = () => {
   const [state, setState] = useState<SaveState>("idle");
@@ -14,12 +14,15 @@ export const useSaveProfile = () => {
 
     try {
       await saveProfile(draft);
-      setState("saved");
+
+      return true;
     } catch (cause) {
       console.error("save profile failed", cause);
       setState("failed");
+
+      return false;
     }
   };
 
-  return { save, state };
+  return { hasFailed: state === "failed", isSaving: state === "saving", save };
 };
