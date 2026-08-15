@@ -1,10 +1,10 @@
+import { PageHeading } from "@/shared/components/page-heading";
 import { SplitLayout } from "@/shared/components/split-layout";
 
 export const CompanySignIn = () => (
   <SplitLayout>
     <section>
-      <h1 className="text-3xl text-ink">Hire with Entwine</h1>
-      <p className="text-3xl text-ink-muted">Not open yet.</p>
+      <PageHeading subtitle="Not open yet." title="Hire with Entwine" />
       <p className="mt-10 text-sm text-ink-muted">
         Entwine is building the engineer side first. The hiring side opens once there are people
         worth introducing you to.

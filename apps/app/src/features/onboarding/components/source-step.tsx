@@ -1,6 +1,8 @@
 import { FileTextIcon } from "@solar-icons/react/linear/file-text";
 import { PenNewSquareIcon } from "@solar-icons/react/linear/pen-new-square";
 
+import { PageHeading } from "@/shared/components/page-heading";
+
 import { SourceOption } from "./source-option";
 
 import type { ProfileSource } from "../types";
@@ -15,7 +17,7 @@ const sources: { description: string; icon: Icon; label: string; source: Profile
     source: "resume",
     icon: FileTextIcon,
     label: "Upload your resume",
-    description: "PDF or DOCX. We read it and fill this in for you.",
+    description: "Drop the file. We read it and fill everything in. About ten seconds.",
   },
   {
     source: "manual",
@@ -27,10 +29,7 @@ const sources: { description: string; icon: Icon; label: string; source: Profile
 
 export const SourceStep = ({ onChoose }: SourceStepProps) => (
   <section>
-    <h1 className="text-3xl text-ink">LinkedIn sent us a headshot</h1>
-    <p className="text-3xl text-ink-muted">
-      We asked for your experience. That is all it would give us.
-    </p>
+    <PageHeading subtitle="Whichever is quicker for you." title="Set up your profile" />
     <ul className="mt-8 flex flex-col gap-2">
       {sources.map((entry) => (
         <SourceOption
@@ -44,5 +43,6 @@ export const SourceStep = ({ onChoose }: SourceStepProps) => (
         />
       ))}
     </ul>
+    <p className="mt-6 text-sm text-ink-muted">Importing this from LinkedIn is coming soon.</p>
   </section>
 );

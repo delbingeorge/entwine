@@ -1,3 +1,4 @@
+import { PageHeading } from "@/shared/components/page-heading";
 import { SplitLayout } from "@/shared/components/split-layout";
 
 import { LinkedInButton } from "./linkedin-button";
@@ -5,13 +6,15 @@ import { LinkedInButton } from "./linkedin-button";
 export const EngineerSignIn = () => (
   <SplitLayout>
     <section>
-      <h1 className="text-3xl text-ink">Find your next role</h1>
-      <p className="text-3xl text-ink-muted">Salary upfront, and a reason for every match.</p>
+      <PageHeading
+        subtitle="Salary upfront, and a reason for every match."
+        title="Find your next role"
+      />
       <div className="mt-10">
         <LinkedInButton />
       </div>
       <p className="mt-4 text-sm text-ink-muted">
-        We read your experience from LinkedIn so you skip the form.
+        Sign in first. Setting up your profile takes about a minute after that.
       </p>
     </section>
   </SplitLayout>
