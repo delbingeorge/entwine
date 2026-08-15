@@ -51,7 +51,11 @@ export const ManualForm = ({
         {...shell}
         canContinue={draft.seniority.length > 0}
         subtitle="Where are you in your career?"
-        title={name === "" ? "Hello! Let's set you up." : `Hello, ${name}! Let's set you up.`}
+        title={
+          name === ""
+            ? "Hello! Let's set up your profile."
+            : `Hello, ${name}! Let's set up your profile.`
+        }
       >
         <ChipGroup
           mode="single"
