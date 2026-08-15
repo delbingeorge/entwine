@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { ChatRoundIcon } from "@solar-icons/react/linear/chat-round";
 import { PenNewSquareIcon } from "@solar-icons/react/linear/pen-new-square";
 
 import { LucideIcon } from "@/shared/components/lucide-icon";
@@ -7,12 +8,15 @@ import { LucideIcon } from "@/shared/components/lucide-icon";
 import { useDialogTransition } from "../hooks/use-dialog-transition";
 
 import { HistoryRow } from "./history-row";
+import { JobStatusChip } from "./job-status-chip";
 
-import type { Thread } from "../types";
+import type { Job, JobStatus, Thread } from "../types";
 
 interface HistoryDialogProps {
   currentId: string;
   isOpen: boolean;
+  jobs: { job: Job; status: JobStatus }[];
+  onOpenJob: (id: string) => void;
   onClose: () => void;
   onDelete: (id: string) => void;
   onNew: () => void;
@@ -25,6 +29,8 @@ const rowId = (index: number) => `history-option-${String(index)}`;
 export const HistoryDialog = ({
   currentId,
   isOpen,
+  jobs,
+  onOpenJob,
   onClose,
   onDelete,
   onNew,
@@ -161,6 +167,36 @@ export const HistoryDialog = ({
               ))
             )}
           </div>
+
+          {jobs.length === 0 ? null : (
+            <div>
+              <p className="px-4 pt-2.5 pb-1 text-[10px] tracking-widest text-composer-placeholder">
+                JOBS
+              </p>
+              {jobs.map(({ job, status }) => (
+                <div className="group flex w-full items-center pr-2" key={job.id}>
+                  <button
+                    className="flex min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left"
+                    onClick={() => {
+                      onOpenJob(job.id);
+                    }}
+                    type="button"
+                  >
+                    <ChatRoundIcon className="size-4 shrink-0 text-composer-soft" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13.5px] text-composer-ink">
+                        {job.title} · {job.company}
+                      </span>
+                      <span className="block truncate font-mono text-[11px] text-composer-placeholder">
+                        {job.salary} · {job.location}
+                      </span>
+                    </span>
+                    <JobStatusChip status={status} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div>
             <p className="px-4 pt-2.5 pb-1 text-[10px] tracking-widest text-composer-placeholder">

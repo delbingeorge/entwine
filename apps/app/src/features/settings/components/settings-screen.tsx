@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 
 import { LucideIcon } from "@/shared/components/lucide-icon";
 import { getSession } from "@/shared/lib/session";
@@ -8,8 +8,6 @@ import { supabase } from "@/shared/lib/supabase";
 
 import { AccountPanel } from "./account-panel";
 import { SettingsTabs } from "./settings-tabs";
-
-import type { SettingsTab } from "../tabs";
 
 const readName = (metadata: Record<string, unknown>) => {
   const raw = metadata.name ?? metadata.full_name;
@@ -19,7 +17,7 @@ const readName = (metadata: Record<string, unknown>) => {
 
 export const SettingsScreen = () => {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<SettingsTab>("Account");
+  const { tab } = useSearch({ from: "/settings" });
   const [account, setAccount] = useState({ email: "", name: "" });
 
   useEffect(() => {
@@ -57,7 +55,12 @@ export const SettingsScreen = () => {
             <h1 className="pt-3 text-[32px] leading-tight font-semibold tracking-tight text-composer-ink">
               Settings
             </h1>
-            <SettingsTabs current={tab} onChange={setTab} />
+            <SettingsTabs
+              current={tab}
+              onChange={(next) => {
+                void navigate({ replace: true, search: { tab: next }, to: "/settings" });
+              }}
+            />
           </div>
 
           <div className="pt-7 pb-16">

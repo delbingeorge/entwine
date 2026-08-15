@@ -1,10 +1,32 @@
+export type AttachmentKind = "pdf" | "text" | "code" | "image";
+
+export const jobStatuses = [
+  "Suggested",
+  "Applied",
+  "Under review",
+  "Interviewing",
+  "Rejected",
+  "Accepted",
+] as const;
+
+export type JobStatus = (typeof jobStatuses)[number];
+
+export interface Job {
+  company: string;
+  description: string;
+  id: string;
+  location: string;
+  rationale: string;
+  salary: string;
+  stack: string[];
+  title: string;
+}
+
 export interface Thread {
   id: string;
   preview: string;
   title: string;
 }
-
-export type AttachmentKind = "pdf" | "text" | "code" | "image";
 
 export interface Attachment {
   id: number;
@@ -25,6 +47,7 @@ export interface AgentTurn {
   html: string;
   id: number;
   isStreaming: boolean;
+  jobIds?: string[];
   role: "agent";
 }
 

@@ -4,6 +4,10 @@
   line-height: 1.65;
 }
 
+.md-body > :first-child {
+  margin-top: 0;
+}
+
 .md-body > :last-child {
   margin-bottom: 0;
 }

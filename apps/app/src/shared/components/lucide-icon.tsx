@@ -1,4 +1,5 @@
 const paths = {
+  "chevron-down": <path d="m6 9 6 6 6-6" />,
   "chevron-left": <path d="m15 18-6-6 6-6" />,
   "log-out": (
     <>

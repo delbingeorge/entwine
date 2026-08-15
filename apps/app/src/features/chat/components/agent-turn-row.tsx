@@ -23,7 +23,7 @@ export const AgentTurnRow = ({ onRetry, turn }: AgentTurnRowProps) => {
   return (
     <div ref={riseRef}>
       <div className="group flex gap-3">
-        <span className="mt-1 shrink-0" title={agentName}>
+        <span className="shrink-0" title={agentName}>
           <CatIcon className="size-4 text-composer-ink" />
         </span>
         <div className="min-w-0 flex-1">

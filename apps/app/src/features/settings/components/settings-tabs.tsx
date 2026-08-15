@@ -1,4 +1,4 @@
-import { settingsTabs, type SettingsTab } from "../tabs";
+import { settingsTabs, type SettingsTab } from "@/shared/lib/settings-tabs";
 
 interface SettingsTabsProps {
   current: SettingsTab;
