@@ -1,0 +1,52 @@
+import type { ReactNode } from "react";
+
+import { PageHeading } from "@/shared/components/page-heading";
+
+interface StepShellProps {
+  canContinue: boolean;
+  children: ReactNode;
+  onBack: () => void;
+  onContinue: () => void;
+  onSkip?: () => void;
+  step: number;
+  subtitle: string;
+  title: string;
+}
+
+export const StepShell = ({
+  canContinue,
+  children,
+  onBack,
+  onContinue,
+  onSkip,
+  step,
+  subtitle,
+  title,
+}: StepShellProps) => (
+  <section>
+    <PageHeading subtitle={subtitle} title={title} />
+
+    <div className="mt-4">{children}</div>
+
+    <div className="mt-10 flex items-center flex-row-reverse gap-4">
+      <button
+        className="rounded-lg ml-auto bg-ink px-5 py-3 text-sm text-surface transition-opacity hover:opacity-90 disabled:opacity-40"
+        disabled={!canContinue}
+        onClick={onContinue}
+        type="button"
+      >
+        Continue
+      </button>
+      {onSkip === undefined ? null : (
+        <button className="text-sm text-ink-muted" onClick={onSkip} type="button">
+          Skip
+        </button>
+      )}
+      {step === 1 ? null : (
+        <button className="text-sm text-ink-muted" onClick={onBack} type="button">
+          Back
+        </button>
+      )}
+    </div>
+  </section>
+);

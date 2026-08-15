@@ -1,0 +1,143 @@
+import { useState } from "react";
+
+import { locationOptions, seniorityOptions, stackOptions, totalManualSteps } from "../questions";
+import { emptyDraft, type ProfileDraft } from "../types";
+
+import { ChipGroup } from "./chip-group";
+import { SalaryField } from "./salary-field";
+import { StepShell } from "./step-shell";
+
+interface ManualFormProps {
+  onBack: () => void;
+  onDone: (draft: ProfileDraft) => void;
+  onStepChange: (step: number) => void;
+  step: number;
+}
+
+export const ManualForm = ({ onBack, onDone, onStepChange, step }: ManualFormProps) => {
+  const [draft, setDraft] = useState<ProfileDraft>(emptyDraft);
+
+  const patch = (change: Partial<ProfileDraft>) => {
+    setDraft((current) => ({ ...current, ...change }));
+  };
+
+  const goBack = () => {
+    if (step === 1) {
+      onBack();
+      return;
+    }
+
+    onStepChange(step - 1);
+  };
+
+  const goNext = () => {
+    if (step === totalManualSteps) {
+      onDone(draft);
+      return;
+    }
+
+    onStepChange(step + 1);
+  };
+
+  const shell = { onBack: goBack, onContinue: goNext, step };
+
+  if (step === 1) {
+    return (
+      <StepShell
+        {...shell}
+        canContinue={draft.seniority.length > 0}
+        subtitle="So we pitch you at the right level."
+        title="Where are you in your career?"
+      >
+        <ChipGroup
+          mode="single"
+          onChange={(seniority) => {
+            patch({ seniority });
+          }}
+          options={seniorityOptions}
+          values={draft.seniority}
+        />
+      </StepShell>
+    );
+  }
+
+  if (step === 2) {
+    return (
+      <StepShell
+        {...shell}
+        canContinue={draft.stack.length > 0}
+        subtitle="Pick everything you would happily work in."
+        title="What do you build with?"
+      >
+        <ChipGroup
+          mode="multi"
+          onChange={(stack) => {
+            patch({ stack });
+          }}
+          options={stackOptions}
+          values={draft.stack}
+        />
+      </StepShell>
+    );
+  }
+
+  if (step === 3) {
+    return (
+      <StepShell
+        {...shell}
+        canContinue={draft.locations.length > 0}
+        subtitle="Pick as many as you are open to."
+        title="Where do you want to work?"
+      >
+        <ChipGroup
+          mode="multi"
+          onChange={(locations) => {
+            patch({ locations });
+          }}
+          options={locationOptions}
+          values={draft.locations}
+        />
+      </StepShell>
+    );
+  }
+
+  if (step === 4) {
+    return (
+      <StepShell
+        {...shell}
+        canContinue={draft.salaryMin.length > 0}
+        subtitle="We only show you roles that clear it."
+        title="What is your salary floor?"
+      >
+        <SalaryField
+          onValueChange={(salaryMin) => {
+            patch({ salaryMin });
+          }}
+          value={draft.salaryMin}
+        />
+      </StepShell>
+    );
+  }
+
+  return (
+    <StepShell
+      {...shell}
+      canContinue
+      onSkip={() => {
+        onDone({ ...draft, wantsToBuild: "" });
+      }}
+      subtitle="One line is plenty. It sharpens every match."
+      title="What do you want to work on next?"
+    >
+      <textarea
+        className="w-full resize-none rounded-lg border border-border bg-surface-raised px-4 py-3 text-ink outline-none placeholder:text-ink-muted focus:border-ink"
+        onChange={(event) => {
+          patch({ wantsToBuild: event.target.value });
+        }}
+        placeholder="Systems where correctness matters, ideally with a small team."
+        rows={3}
+        value={draft.wantsToBuild}
+      />
+    </StepShell>
+  );
+};
