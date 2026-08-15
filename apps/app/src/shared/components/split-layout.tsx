@@ -15,7 +15,7 @@ export const SplitLayout = ({ children }: SplitLayoutProps) => (
         <BrandMark />
       </header>
       <main className="flex flex-1 items-end pb-8">
-        <div className="w-full">{children}</div>
+        <div className="w-full max-w-md">{children}</div>
       </main>
     </div>
     <section className="hidden h-full lg:block">
