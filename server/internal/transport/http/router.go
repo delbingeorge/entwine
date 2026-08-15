@@ -18,6 +18,7 @@ func NewRouter(
 	verifier TokenVerifier,
 	users UserEnsurer,
 	profiles ProfileService,
+	details ProfileDetailService,
 	allowedOrigin string,
 ) http.Handler {
 	mux := http.NewServeMux()
@@ -27,6 +28,8 @@ func NewRouter(
 	mux.Handle("GET /v1/me", authenticated(handleMe(logger)))
 	mux.Handle("GET /v1/profile", authenticated(handleGetProfile(logger, profiles)))
 	mux.Handle("PUT /v1/profile", authenticated(handlePutProfile(logger, profiles)))
+	mux.Handle("GET /v1/profile/detail", authenticated(handleGetProfileDetail(logger, details)))
+	mux.Handle("POST /v1/profile/resume", authenticated(handleImportResume(logger, details)))
 
 	return withCORS(allowedOrigin)(mux)
 }

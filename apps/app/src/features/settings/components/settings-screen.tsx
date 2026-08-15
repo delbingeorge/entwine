@@ -7,6 +7,7 @@ import { getSession } from "@/shared/lib/session";
 import { supabase } from "@/shared/lib/supabase";
 
 import { AccountPanel } from "./account-panel";
+import { ProfilePanel } from "./profile-panel";
 import { SettingsTabs } from "./settings-tabs";
 
 const readName = (metadata: Record<string, unknown>) => {
@@ -72,9 +73,11 @@ export const SettingsScreen = () => {
                   void signOut();
                 }}
               />
-            ) : (
+            ) : null}
+            {tab === "Profile" ? <ProfilePanel /> : null}
+            {tab === "About" ? (
               <p className="text-[12.5px] leading-relaxed text-composer-soft">Not built yet.</p>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

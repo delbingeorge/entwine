@@ -12,6 +12,7 @@ import (
 
 	"github.com/octane/entwine/server/internal/domain"
 	transporthttp "github.com/octane/entwine/server/internal/transport/http"
+	"github.com/octane/entwine/server/internal/usecase/profile"
 )
 
 type fakeVerifier struct {
@@ -47,11 +48,26 @@ func (f *fakeEnsurer) Ensure(_ context.Context, _ domain.Identity) (domain.User,
 	return f.user, f.isNew, nil
 }
 
+type fakeDetails struct {
+	detail domain.ProfileDetail
+	err    error
+}
+
+func (f *fakeDetails) Get(_ context.Context, _ string) (domain.ProfileDetail, error) {
+	return f.detail, f.err
+}
+
+func (f *fakeDetails) ImportResume(
+	_ context.Context, _ string, _ profile.Resume,
+) (domain.ProfileDetail, error) {
+	return f.detail, f.err
+}
+
 const testOrigin = "http://localhost:5173"
 
 func newTestRouter(verifier transporthttp.TokenVerifier, users transporthttp.UserEnsurer) http.Handler {
 	return transporthttp.NewRouter(
-		slog.New(slog.DiscardHandler), verifier, users, &fakeProfiles{}, testOrigin)
+		slog.New(slog.DiscardHandler), verifier, users, &fakeProfiles{}, &fakeDetails{}, testOrigin)
 }
 
 func newProfileRouter(profiles transporthttp.ProfileService) http.Handler {
@@ -59,7 +75,7 @@ func newProfileRouter(profiles transporthttp.ProfileService) http.Handler {
 	users := &fakeEnsurer{user: domain.User{ID: "sub-1", Email: "dev@entwine.dev"}}
 
 	return transporthttp.NewRouter(
-		slog.New(slog.DiscardHandler), verifier, users, profiles, testOrigin)
+		slog.New(slog.DiscardHandler), verifier, users, profiles, &fakeDetails{}, testOrigin)
 }
 
 func TestHealthNeedsNoToken(t *testing.T) {

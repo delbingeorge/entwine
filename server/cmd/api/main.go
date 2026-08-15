@@ -15,6 +15,7 @@ import (
 
 	"github.com/octane/entwine/server/internal/config"
 	"github.com/octane/entwine/server/internal/storage/postgres"
+	"github.com/octane/entwine/server/internal/system/llm"
 	"github.com/octane/entwine/server/internal/system/supabase"
 	transporthttp "github.com/octane/entwine/server/internal/transport/http"
 	"github.com/octane/entwine/server/internal/usecase/identity"
@@ -56,11 +57,15 @@ func run(logger *slog.Logger) error {
 	}
 
 	users := identity.NewService(postgres.NewUserRepo(db), time.Now)
-	profiles := profile.NewService(postgres.NewCandidateProfileRepo(db), time.Now)
+	profileRepo := postgres.NewCandidateProfileRepo(db)
+	profiles := profile.NewService(profileRepo, time.Now)
+	parser := llm.NewGeminiParser(llm.GeminiConfig{APIKey: cfg.GeminiAPIKey, Model: cfg.GeminiModel})
+	details := profile.NewDetailService(
+		profileRepo, postgres.NewProfileDetailRepo(db), parser, time.Now)
 
 	server := &http.Server{
 		Addr:              net.JoinHostPort("", strconv.Itoa(cfg.Port)),
-		Handler:           transporthttp.NewRouter(logger, verifier, users, profiles, cfg.AppOrigin),
+		Handler:           transporthttp.NewRouter(logger, verifier, users, profiles, details, cfg.AppOrigin),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

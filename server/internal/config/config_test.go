@@ -16,6 +16,7 @@ func setRequired(t *testing.T) {
 	t.Setenv("SUPABASE_JWT_ISSUER", "https://project.supabase.co/auth/v1")
 	t.Setenv("SUPABASE_JWT_AUDIENCE", "authenticated")
 	t.Setenv("APP_ORIGIN", "http://localhost:5173")
+	t.Setenv("GEMINI_API_KEY", "test-gemini-key")
 }
 
 func TestLoadPort(t *testing.T) {
@@ -72,6 +73,7 @@ func TestLoadRequiresSecrets(t *testing.T) {
 		"SUPABASE_JWT_ISSUER",
 		"SUPABASE_JWT_AUDIENCE",
 		"APP_ORIGIN",
+		"GEMINI_API_KEY",
 	} {
 		t.Run("missing "+key, func(t *testing.T) {
 			setRequired(t)

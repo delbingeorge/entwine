@@ -15,12 +15,15 @@ type Config struct {
 	SupabaseJWTIssuer   string
 	SupabaseJWTAudience string
 	AppOrigin           string
+	GeminiAPIKey        string
+	GeminiModel         string
 	ShutdownTimeout     time.Duration
 }
 
 const (
 	defaultPort            = 8080
 	defaultShutdownTimeout = 10 * time.Second
+	defaultGeminiModel     = "gemini-2.5-flash"
 	maxPort                = 65535
 )
 
@@ -61,6 +64,16 @@ func Load() (Config, error) {
 		return Config{}, err
 	}
 
+	geminiKey, err := stringFromEnv("GEMINI_API_KEY")
+	if err != nil {
+		return Config{}, err
+	}
+
+	geminiModel := os.Getenv("GEMINI_MODEL")
+	if geminiModel == "" {
+		geminiModel = defaultGeminiModel
+	}
+
 	return Config{
 		Port:                port,
 		DatabaseURL:         databaseURL,
@@ -68,6 +81,8 @@ func Load() (Config, error) {
 		SupabaseJWTIssuer:   issuer,
 		SupabaseJWTAudience: audience,
 		AppOrigin:           appOrigin,
+		GeminiAPIKey:        geminiKey,
+		GeminiModel:         geminiModel,
 		ShutdownTimeout:     defaultShutdownTimeout,
 	}, nil
 }
