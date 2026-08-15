@@ -1,13 +1,17 @@
 import { LinkedInIcon } from "@/shared/components/linkedin-icon";
 import { LucideIcon } from "@/shared/components/lucide-icon";
+import type { Profile } from "@/shared/lib/profile-api";
+
+import { PreferencesSection } from "./preferences-section";
 
 interface AccountPanelProps {
   email: string;
   name: string;
   onSignOut: () => void;
+  profile: Profile | null;
 }
 
-export const AccountPanel = ({ email, name, onSignOut }: AccountPanelProps) => (
+export const AccountPanel = ({ email, name, onSignOut, profile }: AccountPanelProps) => (
   <div className="flex flex-col gap-7">
     <section>
       <h2 className="pb-4 text-[11px] tracking-widest text-composer-placeholder">PROFILE</h2>
@@ -28,6 +32,8 @@ export const AccountPanel = ({ email, name, onSignOut }: AccountPanelProps) => (
         <p className="text-[12px] text-composer-placeholder">Taken from your LinkedIn profile.</p>
       </div>
     </section>
+
+    <PreferencesSection profile={profile} />
 
     <section className="border-t border-composer-line pt-7">
       <h2 className="pb-4 text-[11px] tracking-widest text-composer-placeholder">

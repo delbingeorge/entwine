@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
 import { LucideIcon } from "@/shared/components/lucide-icon";
+import { getProfile, type Profile } from "@/shared/lib/profile-api";
 import { getSession } from "@/shared/lib/session";
 import { supabase } from "@/shared/lib/supabase";
 
@@ -20,6 +21,7 @@ export const SettingsScreen = () => {
   const navigate = useNavigate();
   const { tab } = useSearch({ from: "/settings" });
   const [account, setAccount] = useState({ email: "", name: "" });
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     void getSession().then((session) => {
@@ -30,6 +32,14 @@ export const SettingsScreen = () => {
         });
       }
     });
+  }, []);
+
+  useEffect(() => {
+    getProfile()
+      .then(setProfile)
+      .catch((cause: unknown) => {
+        console.error("could not load your preferences", cause);
+      });
   }, []);
 
   const signOut = async () => {
@@ -72,6 +82,7 @@ export const SettingsScreen = () => {
                 onSignOut={() => {
                   void signOut();
                 }}
+                profile={profile}
               />
             ) : null}
             {tab === "Profile" ? <ProfilePanel /> : null}

@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
     }
 
     if ((await getProfile()) === null) {
-      throw redirect({ replace: true, to: "/onboarding" });
+      throw redirect({ replace: true, search: { edit: false }, to: "/onboarding" });
     }
 
     return { isSignedIn: true };
