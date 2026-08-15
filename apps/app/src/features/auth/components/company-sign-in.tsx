@@ -1,7 +1,7 @@
-import { AuthLayout } from "./auth-layout";
+import { SplitLayout } from "@/shared/components/split-layout";
 
 export const CompanySignIn = () => (
-  <AuthLayout>
+  <SplitLayout>
     <section>
       <h1 className="text-3xl text-ink">Hire with Entwine</h1>
       <p className="text-3xl text-ink-muted">Not open yet.</p>
@@ -10,5 +10,5 @@ export const CompanySignIn = () => (
         worth introducing you to.
       </p>
     </section>
-  </AuthLayout>
+  </SplitLayout>
 );

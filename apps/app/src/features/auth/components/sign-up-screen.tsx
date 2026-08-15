@@ -1,8 +1,9 @@
-import { AuthLayout } from "./auth-layout";
+import { SplitLayout } from "@/shared/components/split-layout";
+
 import { IntentPanel } from "./intent-panel";
 
 export const SignUpScreen = () => (
-  <AuthLayout>
+  <SplitLayout>
     <IntentPanel />
-  </AuthLayout>
+  </SplitLayout>
 );

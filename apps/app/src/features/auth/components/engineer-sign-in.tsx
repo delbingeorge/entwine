@@ -1,17 +1,18 @@
-import { AuthLayout } from "./auth-layout";
+import { SplitLayout } from "@/shared/components/split-layout";
+
 import { LinkedInButton } from "./linkedin-button";
 
 export const EngineerSignIn = () => (
-  <AuthLayout>
+  <SplitLayout>
     <section>
       <h1 className="text-3xl text-ink">Find your next role</h1>
-      <p className="text-3xl text-ink-muted">We do the searching. You focus on what’s next.</p>
-      <div className="mt-6">
+      <p className="text-3xl text-ink-muted">Salary upfront, and a reason for every match.</p>
+      <div className="mt-10">
         <LinkedInButton />
       </div>
-      <p className="mt-2 text-sm text-ink-muted">
+      <p className="mt-4 text-sm text-ink-muted">
         We read your experience from LinkedIn so you skip the form.
       </p>
     </section>
-  </AuthLayout>
+  </SplitLayout>
 );
