@@ -5,7 +5,7 @@ export const IntentPanel = () => (
     <h1 className="text-3xl text-ink">Get started</h1>
     <p className="text-3xl text-ink-muted">
       Are you <IntentLink to="/for-engineers">looking</IntentLink>, or{" "}
-      <IntentLink to="/for-hirers">hiring</IntentLink>?
+      <IntentLink to="/for-companies">hiring</IntentLink>?
     </p>
   </section>
 );

@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 
 interface IntentLinkProps {
   children: ReactNode;
-  to: "/for-engineers" | "/for-hirers";
+  to: "/for-engineers" | "/for-companies";
 }
 
 export const IntentLink = ({ children, to }: IntentLinkProps) => (

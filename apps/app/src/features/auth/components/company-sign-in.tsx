@@ -1,6 +1,6 @@
 import { AuthLayout } from "./auth-layout";
 
-export const HirerSignIn = () => (
+export const CompanySignIn = () => (
   <AuthLayout>
     <section>
       <h1 className="text-3xl text-ink">Hire with Entwine</h1>
