@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { FadeSwap } from "@/shared/components/fade-swap";
 import { SplitLayout } from "@/shared/components/split-layout";
 
 import { DraftSummary } from "./draft-summary";
@@ -19,11 +20,13 @@ export const OnboardingScreen = () => {
 
   return (
     <SplitLayout headerAside={draft === null ? <StepCounter step={step} /> : null} wide>
-      {draft === null ? (
-        <ManualForm onDone={setDraft} onStepChange={setStep} step={step} />
-      ) : (
-        <DraftSummary draft={draft} onEdit={restart} />
-      )}
+      <FadeSwap swapKey={draft === null ? step : "summary"}>
+        {draft === null ? (
+          <ManualForm onDone={setDraft} onStepChange={setStep} step={step} />
+        ) : (
+          <DraftSummary draft={draft} onEdit={restart} />
+        )}
+      </FadeSwap>
     </SplitLayout>
   );
 };
