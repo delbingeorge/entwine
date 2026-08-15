@@ -23,7 +23,7 @@ type Config struct {
 const (
 	defaultPort            = 8080
 	defaultShutdownTimeout = 10 * time.Second
-	defaultGeminiModel     = "gemini-2.5-flash"
+	defaultGeminiModel     = "gemini-3.5-flash"
 	maxPort                = 65535
 )
 

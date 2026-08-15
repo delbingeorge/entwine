@@ -1,3 +1,5 @@
+import { importResume } from "@/shared/lib/profile-detail-api";
+
 import { useChat } from "../hooks/use-chat";
 import { useJobThreads } from "../hooks/use-job-threads";
 import { classifyFile, humanSize } from "../lib/classify-file";
@@ -51,6 +53,12 @@ export const ChatScreen = () => {
                 size: humanSize(file.size),
                 url: kind === "image" ? URL.createObjectURL(file) : undefined,
               });
+
+              if (kind === "pdf") {
+                importResume(file).catch((cause: unknown) => {
+                  console.error("resume import failed", cause);
+                });
+              }
             }}
             onRemoveAttachment={() => {
               chat.setAttachment(null);

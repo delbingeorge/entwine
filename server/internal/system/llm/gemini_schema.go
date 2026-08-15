@@ -20,6 +20,7 @@ type geminiRequest struct {
 }
 
 type geminiContent struct {
+	Role  string       `json:"role,omitempty"`
 	Parts []geminiPart `json:"parts"`
 }
 

@@ -1,92 +1,122 @@
 import { useEffect, useRef, useState } from "react";
 
+import { streamChat, type ChatMessage } from "@/shared/lib/chat-api";
+
+import { htmlToText } from "../lib/html-to-text";
+import { renderMarkdown } from "../lib/render-markdown";
+
 import type { Attachment, Turn, UserTurn } from "../types";
 
 interface ConversationOptions {
-  replyFor: (text: string, attachment: Attachment | null) => string;
   seed: Turn[];
-  seedAttachment?: Attachment | null;
 }
 
-export const useConversation = ({ replyFor, seed, seedAttachment = null }: ConversationOptions) => {
+const asHistory = (turns: Turn[]): ChatMessage[] =>
+  turns.flatMap<ChatMessage>((turn) => {
+    if (turn.role === "user") {
+      const text =
+        turn.attachment === null ? turn.text : `${turn.text}\n\n[attached ${turn.attachment.name}]`;
+
+      return text.trim() === "" ? [] : [{ role: "user", text }];
+    }
+
+    if (turn.role === "agent" && turn.html !== "") {
+      return [{ role: "agent", text: htmlToText(turn.html) }];
+    }
+
+    return [];
+  });
+
+export const useConversation = ({ seed }: ConversationOptions) => {
   const [turns, setTurns] = useState<Turn[]>(seed);
-  const [attachment, setAttachment] = useState<Attachment | null>(seedAttachment);
+  const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [value, setValue] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const [editing, setEditing] = useState<number | null>(null);
   const nextId = useRef(1000);
-  const timers = useRef<number[]>([]);
+  const abort = useRef<AbortController | null>(null);
 
-  const stopTimers = () => {
-    timers.current.forEach((timer) => {
-      window.clearInterval(timer);
-      window.clearTimeout(timer);
-    });
-    timers.current = [];
-  };
+  useEffect(
+    () => () => {
+      abort.current?.abort();
+    },
+    [],
+  );
 
-  useEffect(() => stopTimers, []);
-
-  const stream = (turnId: number, html: string) => {
-    const words = html.match(/<[^>]+>|\s+|[^\s<]+/gu) ?? [];
-    let index = 0;
-
-    const timer = window.setInterval(() => {
-      index += 1;
-      const partial = words.slice(0, index).join("");
-
-      setTurns((current) =>
-        current.map((turn) =>
-          turn.id === turnId && turn.role === "agent" ? { ...turn, html: partial } : turn,
-        ),
-      );
-
-      if (index >= words.length) {
-        window.clearInterval(timer);
-        setTurns((current) =>
-          current.map((turn) =>
-            turn.id === turnId && turn.role === "agent"
-              ? { ...turn, html, isStreaming: false }
-              : turn,
-          ),
-        );
-        setIsBusy(false);
-      }
-    }, 16);
-
-    timers.current.push(timer);
-  };
-
-  const respond = (text: string, sent: Attachment | null) => {
+  const respond = async (history: ChatMessage[]) => {
     setIsBusy(true);
+
     const thinkingId = nextId.current++;
     setTurns((current) => [...current, { id: thinkingId, role: "thinking" }]);
 
-    const timer = window.setTimeout(() => {
-      const agentId = nextId.current++;
-      setTurns((current) => [
-        ...current.filter((turn) => turn.id !== thinkingId),
-        { id: agentId, role: "agent", html: "", isStreaming: true },
-      ]);
-      stream(agentId, replyFor(text, sent));
-    }, 700);
+    const controller = new AbortController();
+    abort.current = controller;
 
-    timers.current.push(timer);
+    const agentId = nextId.current++;
+    let markdown = "";
+    let hasStarted = false;
+
+    try {
+      await streamChat({
+        messages: history,
+        signal: controller.signal,
+        onToken: (token) => {
+          markdown += token;
+
+          if (!hasStarted) {
+            hasStarted = true;
+            setTurns((current) => [
+              ...current.filter((turn) => turn.id !== thinkingId),
+              { id: agentId, role: "agent", html: "", isStreaming: true },
+            ]);
+          }
+
+          setTurns((current) =>
+            current.map((turn) =>
+              turn.id === agentId && turn.role === "agent"
+                ? { ...turn, html: renderMarkdown(markdown) }
+                : turn,
+            ),
+          );
+        },
+      });
+
+      setTurns((current) =>
+        current
+          .filter((turn) => turn.id !== thinkingId)
+          .map((turn) =>
+            turn.id === agentId && turn.role === "agent" ? { ...turn, isStreaming: false } : turn,
+          ),
+      );
+    } catch (cause) {
+      if (controller.signal.aborted) {
+        return;
+      }
+
+      console.error("chat failed", cause);
+      setTurns((current) => [
+        ...current.filter((turn) => turn.id !== thinkingId && turn.id !== agentId),
+        {
+          id: nextId.current++,
+          role: "agent",
+          html: "<p>I could not answer just now. Try again in a moment.</p>",
+          isStreaming: false,
+        },
+      ]);
+    } finally {
+      setIsBusy(false);
+    }
   };
 
   const stop = () => {
-    stopTimers();
-    setTurns((current) => {
-      const last = current[current.length - 1];
-
-      if (last?.role === "thinking" || (last?.role === "agent" && last.html === "")) {
-        return current.slice(0, -1);
-      }
-
-      return current.map((turn) =>
-        turn.role === "agent" && turn.isStreaming ? { ...turn, isStreaming: false } : turn,
-      );
-    });
+    abort.current?.abort();
+    setTurns((current) =>
+      current
+        .filter((turn) => turn.role !== "thinking")
+        .map((turn) =>
+          turn.role === "agent" && turn.isStreaming ? { ...turn, isStreaming: false } : turn,
+        ),
+    );
     setIsBusy(false);
   };
 
@@ -103,14 +133,14 @@ export const useConversation = ({ replyFor, seed, seedAttachment = null }: Conve
     }
 
     const sent = attachment;
-    setTurns((current) => [
-      ...current,
-      { id: nextId.current++, role: "user", text, attachment: sent },
-    ]);
+    const asked: Turn = { id: nextId.current++, role: "user", text, attachment: sent };
+    const next = [...turns, asked];
+
+    setTurns(next);
     setValue("");
     setAttachment(null);
     setEditing(null);
-    respond(text, sent);
+    void respond(asHistory(next));
   };
 
   return {
@@ -125,23 +155,16 @@ export const useConversation = ({ replyFor, seed, seedAttachment = null }: Conve
         return;
       }
 
-      setTurns((current) => {
-        const index = current.findIndex((turn) => turn.id === turnId);
-        const previous = current
-          .slice(0, index)
-          .reverse()
-          .find((turn) => turn.role === "user");
+      const trimmed = turns.slice(
+        0,
+        turns.findIndex((turn) => turn.id === turnId),
+      );
 
-        window.setTimeout(() => {
-          respond(previous?.role === "user" ? previous.text : "", null);
-        }, 0);
-
-        return current.filter((turn) => turn.id !== turnId);
-      });
+      setTurns(trimmed);
+      void respond(asHistory(trimmed));
     },
     setAttachment,
     setValue,
-    submit,
     startEdit: (turn: UserTurn) => {
       setEditing(turn.id);
       setValue(turn.text);
@@ -152,6 +175,7 @@ export const useConversation = ({ replyFor, seed, seedAttachment = null }: Conve
         ),
       );
     },
+    submit,
     turns,
     value,
   };

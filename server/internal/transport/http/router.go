@@ -19,6 +19,7 @@ func NewRouter(
 	users UserEnsurer,
 	profiles ProfileService,
 	details ProfileDetailService,
+	chats ChatService,
 	allowedOrigin string,
 ) http.Handler {
 	mux := http.NewServeMux()
@@ -30,6 +31,7 @@ func NewRouter(
 	mux.Handle("PUT /v1/profile", authenticated(handlePutProfile(logger, profiles)))
 	mux.Handle("GET /v1/profile/detail", authenticated(handleGetProfileDetail(logger, details)))
 	mux.Handle("POST /v1/profile/resume", authenticated(handleImportResume(logger, details)))
+	mux.Handle("POST /v1/chat", authenticated(handleChat(logger, chats)))
 
 	return withCORS(allowedOrigin)(mux)
 }

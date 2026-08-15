@@ -18,6 +18,7 @@ import (
 	"github.com/octane/entwine/server/internal/system/llm"
 	"github.com/octane/entwine/server/internal/system/supabase"
 	transporthttp "github.com/octane/entwine/server/internal/transport/http"
+	"github.com/octane/entwine/server/internal/usecase/chat"
 	"github.com/octane/entwine/server/internal/usecase/identity"
 	"github.com/octane/entwine/server/internal/usecase/profile"
 )
@@ -60,12 +61,15 @@ func run(logger *slog.Logger) error {
 	profileRepo := postgres.NewCandidateProfileRepo(db)
 	profiles := profile.NewService(profileRepo, time.Now)
 	parser := llm.NewGeminiParser(llm.GeminiConfig{APIKey: cfg.GeminiAPIKey, Model: cfg.GeminiModel})
-	details := profile.NewDetailService(
-		profileRepo, postgres.NewProfileDetailRepo(db), parser, time.Now)
+	detailRepo := postgres.NewProfileDetailRepo(db)
+	details := profile.NewDetailService(profileRepo, detailRepo, parser, time.Now)
+	chats := chat.NewService(
+		llm.NewGeminiResponder(llm.GeminiConfig{APIKey: cfg.GeminiAPIKey, Model: cfg.GeminiModel}),
+		profileRepo, detailRepo)
 
 	server := &http.Server{
 		Addr:              net.JoinHostPort("", strconv.Itoa(cfg.Port)),
-		Handler:           transporthttp.NewRouter(logger, verifier, users, profiles, details, cfg.AppOrigin),
+		Handler:           transporthttp.NewRouter(logger, verifier, users, profiles, details, chats, cfg.AppOrigin),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

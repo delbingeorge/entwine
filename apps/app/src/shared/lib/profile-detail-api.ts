@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 import { AppError, apiRequest } from "./api-client";
+import { env } from "./env";
+import { getSession } from "./session";
 
 export const profileDetailSchema = z.object({
   experiences: z.array(
@@ -49,4 +51,27 @@ export const getProfileDetail = async (): Promise<ProfileDetail> => {
 
     throw cause;
   }
+};
+
+export const importResume = async (file: File): Promise<ProfileDetail> => {
+  const session = await getSession();
+
+  if (session === null) {
+    throw new AppError("unauthorized", "You are signed out.", 401);
+  }
+
+  const body = new FormData();
+  body.append("resume", file);
+
+  const response = await fetch(`${env.VITE_API_URL}/v1/profile/resume`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${session.access_token}` },
+    body,
+  });
+
+  if (!response.ok) {
+    throw new AppError("resume_failed", "Could not read that resume.", response.status);
+  }
+
+  return profileDetailSchema.parse(await response.json());
 };
