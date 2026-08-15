@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   createThread,
@@ -10,6 +10,11 @@ import {
 export const useThreads = () => {
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
+  const currentRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    currentRef.current = currentId;
+  }, [currentId]);
 
   const refresh = useCallback(async () => {
     const listed = await listThreads();
@@ -42,12 +47,21 @@ export const useThreads = () => {
     remove: (id: string) => {
       deleteThread(id)
         .then(refresh)
-        .then((listed) => {
-          if (id !== currentId) {
+        .then(async (listed) => {
+          if (currentRef.current !== id) {
             return;
           }
 
-          setCurrentId(listed[0]?.id ?? null);
+          const next = listed[0];
+
+          if (next !== undefined) {
+            setCurrentId(next.id);
+            return;
+          }
+
+          const created = await createThread();
+          setThreads([created]);
+          setCurrentId(created.id);
         })
         .catch((cause: unknown) => {
           console.error("could not delete that chat", cause);

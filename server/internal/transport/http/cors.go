@@ -9,7 +9,7 @@ func withCORS(allowedOrigin string) func(http.Handler) http.Handler {
 				header := w.Header()
 				header.Set("Access-Control-Allow-Origin", allowedOrigin)
 				header.Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
-				header.Set("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
+				header.Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 				header.Set("Access-Control-Max-Age", "600")
 				header.Add("Vary", "Origin")
 			}
