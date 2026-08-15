@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { useDisplayName } from "@/shared/hooks/use-display-name";
+
 import { locationOptions, seniorityOptions, stackOptions, totalManualSteps } from "../questions";
 import { emptyDraft, type ProfileDraft } from "../types";
 
@@ -8,25 +10,20 @@ import { SalaryField } from "./salary-field";
 import { StepShell } from "./step-shell";
 
 interface ManualFormProps {
-  onBack: () => void;
   onDone: (draft: ProfileDraft) => void;
   onStepChange: (step: number) => void;
   step: number;
 }
 
-export const ManualForm = ({ onBack, onDone, onStepChange, step }: ManualFormProps) => {
+export const ManualForm = ({ onDone, onStepChange, step }: ManualFormProps) => {
   const [draft, setDraft] = useState<ProfileDraft>(emptyDraft);
+  const name = useDisplayName();
 
   const patch = (change: Partial<ProfileDraft>) => {
     setDraft((current) => ({ ...current, ...change }));
   };
 
   const goBack = () => {
-    if (step === 1) {
-      onBack();
-      return;
-    }
-
     onStepChange(step - 1);
   };
 
@@ -46,8 +43,8 @@ export const ManualForm = ({ onBack, onDone, onStepChange, step }: ManualFormPro
       <StepShell
         {...shell}
         canContinue={draft.seniority.length > 0}
-        subtitle="So we pitch you at the right level."
-        title="Where are you in your career?"
+        subtitle="Where are you in your career?"
+        title={name === "" ? "Hello! Let's set you up." : `Hello, ${name}! Let's set you up.`}
       >
         <ChipGroup
           mode="single"

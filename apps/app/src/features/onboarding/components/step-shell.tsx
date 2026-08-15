@@ -28,9 +28,9 @@ export const StepShell = ({
 
     <div className="mt-4">{children}</div>
 
-    <div className="mt-10 flex items-center flex-row-reverse gap-4">
+    <div className="mt-10 flex flex-row-reverse items-center gap-4">
       <button
-        className="rounded-lg ml-auto bg-ink px-5 py-3 text-sm text-surface transition-opacity hover:opacity-90 disabled:opacity-40"
+        className="ml-auto rounded-lg bg-ink px-5 py-3 text-sm text-surface transition-opacity hover:opacity-90 disabled:opacity-40"
         disabled={!canContinue}
         onClick={onContinue}
         type="button"

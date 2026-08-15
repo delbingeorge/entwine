@@ -1,5 +1,3 @@
-export type ProfileSource = "resume" | "manual";
-
 export interface ProfileDraft {
   seniority: string[];
   stack: string[];

@@ -1,7 +1,30 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+
+import { getProfile } from "@/shared/lib/profile-api";
+import { getSession } from "@/shared/lib/session";
 
 import { SignUpScreen } from "@/features/auth";
+import { ShortlistScreen } from "@/features/shortlist";
 
 export const Route = createFileRoute("/")({
-  component: SignUpScreen,
+  beforeLoad: async () => {
+    const session = await getSession();
+
+    if (session === null) {
+      return { isSignedIn: false };
+    }
+
+    if ((await getProfile()) === null) {
+      throw redirect({ replace: true, to: "/onboarding" });
+    }
+
+    return { isSignedIn: true };
+  },
+  component: HomePage,
 });
+
+function HomePage() {
+  const { isSignedIn } = Route.useRouteContext();
+
+  return isSignedIn ? <ShortlistScreen /> : <SignUpScreen />;
+}

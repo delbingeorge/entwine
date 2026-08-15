@@ -1,21 +1,6 @@
-import { z } from "zod";
-
-import { apiRequest } from "@/shared/lib/api-client";
+import { putProfile } from "@/shared/lib/profile-api";
 
 import type { ProfileDraft } from "../types";
-
-const profileSchema = z.object({
-  seniority: z.string(),
-  primaryStack: z.array(z.string()),
-  locations: z.array(z.string()),
-  remotePref: z.string(),
-  salaryMin: z.number(),
-  salaryCurrency: z.string(),
-  wantsToBuild: z.string(),
-  status: z.string(),
-});
-
-export type Profile = z.infer<typeof profileSchema>;
 
 const seniorityByLabel: Record<string, string> = {
   Junior: "junior",
@@ -36,8 +21,4 @@ const toPayload = (draft: ProfileDraft) => ({
   wantsToBuild: draft.wantsToBuild,
 });
 
-export const saveProfile = (draft: ProfileDraft) =>
-  apiRequest("/v1/profile", profileSchema, {
-    method: "PUT",
-    body: JSON.stringify(toPayload(draft)),
-  });
+export const saveProfile = (draft: ProfileDraft) => putProfile(toPayload(draft));

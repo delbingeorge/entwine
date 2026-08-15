@@ -21,8 +21,8 @@ function AuthCallbackPage() {
       }
 
       getMe()
-        .then((me) => {
-          void navigate({ replace: true, to: me.isNew ? "/onboarding" : "/" });
+        .then(() => {
+          void navigate({ replace: true, to: "/" });
         })
         .catch((cause: unknown) => {
           console.error("me request failed", cause);
