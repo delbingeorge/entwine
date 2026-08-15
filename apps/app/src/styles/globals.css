@@ -9,4 +9,25 @@
   --color-ink-muted: oklch(0.62 0.004 95);
   --color-primary: oklch(0.55 0.16 255);
   --color-primary-foreground: oklch(0.99 0 0);
+
+  --color-composer-ink: #1c1c1a;
+  --color-composer-soft: #6b6a66;
+  --color-composer-placeholder: #9a9893;
+  --color-composer-line: #e5e3de;
+  --color-composer-surface: #ffffff;
+  --color-composer-shell: #f2f1ec;
+  --color-composer-track: #f0efea;
+  --color-composer-solid: #1c1c1a;
+  --color-composer-solid-ink: #f7f6f2;
+  --color-hyper-blue: #4a4aff;
+
+  --font-ui:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+}
+
+@layer components {
+  .composer-field:focus-visible {
+    outline: none;
+  }
 }

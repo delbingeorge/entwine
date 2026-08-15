@@ -4,7 +4,7 @@ import { getProfile } from "@/shared/lib/profile-api";
 import { getSession } from "@/shared/lib/session";
 
 import { SignUpScreen } from "@/features/auth";
-import { ShortlistScreen } from "@/features/shortlist";
+import { ChatScreen } from "@/features/chat";
 
 export const Route = createFileRoute("/")({
   beforeLoad: async () => {
@@ -26,5 +26,5 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const { isSignedIn } = Route.useRouteContext();
 
-  return isSignedIn ? <ShortlistScreen /> : <SignUpScreen />;
+  return isSignedIn ? <ChatScreen /> : <SignUpScreen />;
 }
