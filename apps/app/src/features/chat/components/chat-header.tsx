@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { CompassIcon } from "@solar-icons/react/linear/compass";
 import { HistoryIcon } from "@solar-icons/react/linear/history";
 import { UserCircleIcon } from "@solar-icons/react/linear/user-circle";
 import { useNavigate } from "@tanstack/react-router";
@@ -65,6 +66,17 @@ export const ChatHeader = ({
             type="button"
           >
             <HistoryIcon className="size-4" />
+          </button>
+          <button
+            aria-label="Coaching"
+            className="flex size-6 items-center justify-center rounded-full text-composer-soft transition-colors hover:text-composer-ink"
+            onClick={() => {
+              void navigate({ search: { tab: "Negotiation" }, to: "/coaching" });
+            }}
+            title="Coaching"
+            type="button"
+          >
+            <CompassIcon className="size-4" />
           </button>
           <div className="relative">
             <button

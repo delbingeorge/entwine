@@ -6,7 +6,7 @@ export const requireSession = async () => {
   const session = await getSession();
 
   if (session === null) {
-    throw redirect({ replace: true, to: "/" });
+    throw redirect({ replace: true, search: { thread: "" }, to: "/" });
   }
 
   return session;

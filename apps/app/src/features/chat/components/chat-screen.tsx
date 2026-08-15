@@ -1,3 +1,5 @@
+import { useSearch } from "@tanstack/react-router";
+
 import { importResume } from "@/shared/lib/profile-detail-api";
 
 import { useChat } from "../hooks/use-chat";
@@ -13,7 +15,8 @@ import { Transcript } from "./transcript";
 import "../styles/md-body.css";
 
 export const ChatScreen = () => {
-  const history = useThreads();
+  const { thread } = useSearch({ from: "/" });
+  const history = useThreads(thread);
   const chat = useChat({ onSettled: history.syncTitles, threadId: history.currentId });
   const threads = useJobThreads();
 

@@ -3,13 +3,14 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
 import { LucideIcon } from "@/shared/components/lucide-icon";
+import { TabBar } from "@/shared/components/tab-bar";
 import { getProfile, type Profile } from "@/shared/lib/profile-api";
 import { getSession } from "@/shared/lib/session";
+import { settingsTabs, type SettingsTab } from "@/shared/lib/settings-tabs";
 import { supabase } from "@/shared/lib/supabase";
 
 import { AccountPanel } from "./account-panel";
 import { ProfilePanel } from "./profile-panel";
-import { SettingsTabs } from "./settings-tabs";
 
 const readName = (metadata: Record<string, unknown>) => {
   const raw = metadata.name ?? metadata.full_name;
@@ -44,7 +45,7 @@ export const SettingsScreen = () => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    await navigate({ replace: true, to: "/" });
+    await navigate({ replace: true, search: { thread: "" }, to: "/" });
   };
 
   return (
@@ -56,7 +57,7 @@ export const SettingsScreen = () => {
             <button
               className="-ml-2 flex items-center gap-1 rounded-md px-2 py-1 text-[12.5px] text-composer-soft hover:bg-composer-track hover:text-composer-ink"
               onClick={() => {
-                void navigate({ to: "/" });
+                void navigate({ search: { thread: "" }, to: "/" });
               }}
               type="button"
             >
@@ -66,11 +67,12 @@ export const SettingsScreen = () => {
             <h1 className="pt-3 text-[32px] leading-tight font-semibold tracking-tight text-composer-ink">
               Settings
             </h1>
-            <SettingsTabs
+            <TabBar
               current={tab}
-              onChange={(next) => {
+              onChange={(next: SettingsTab) => {
                 void navigate({ replace: true, search: { tab: next }, to: "/settings" });
               }}
+              tabs={settingsTabs}
             />
           </div>
 

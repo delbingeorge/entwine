@@ -7,7 +7,7 @@ import {
   type ThreadSummary,
 } from "@/shared/lib/thread-api";
 
-export const useThreads = () => {
+export const useThreads = (requestedId: string) => {
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const currentRef = useRef<string | null>(null);
@@ -26,6 +26,13 @@ export const useThreads = () => {
   useEffect(() => {
     refresh()
       .then(async (listed) => {
+        const requested = listed.find((thread) => thread.id === requestedId);
+
+        if (requested !== undefined) {
+          setCurrentId(requested.id);
+          return;
+        }
+
         const newest = listed[0];
 
         if (newest !== undefined) {
@@ -40,7 +47,7 @@ export const useThreads = () => {
       .catch((cause: unknown) => {
         console.error("could not load your chats", cause);
       });
-  }, [refresh]);
+  }, [refresh, requestedId]);
 
   return {
     currentId,

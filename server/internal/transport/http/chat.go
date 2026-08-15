@@ -11,7 +11,7 @@ import (
 )
 
 type ChatService interface {
-	StartThread(ctx context.Context, userID string) (domain.Thread, error)
+	StartThread(ctx context.Context, userID string, kind domain.ThreadKind, title string) (domain.Thread, error)
 	ListThreads(ctx context.Context, userID string) ([]domain.Thread, error)
 	History(ctx context.Context, threadID, userID string) ([]domain.ChatMessage, error)
 	DeleteThread(ctx context.Context, threadID, userID string) error

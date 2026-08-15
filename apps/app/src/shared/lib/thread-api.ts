@@ -23,8 +23,16 @@ export type StoredMessage = z.infer<typeof messageSchema>;
 
 export const listThreads = () => apiRequest("/v1/threads", z.array(threadSchema));
 
-export const createThread = () =>
-  apiRequest("/v1/threads", threadSchema, { method: "POST", body: "{}" });
+interface NewThread {
+  kind?: "coaching" | "main";
+  title?: string;
+}
+
+export const createThread = (thread: NewThread = {}) =>
+  apiRequest("/v1/threads", threadSchema, {
+    method: "POST",
+    body: JSON.stringify({ kind: thread.kind ?? "main", title: thread.title ?? "" }),
+  });
 
 export const getThreadMessages = (threadId: string) =>
   apiRequest(`/v1/threads/${threadId}/messages`, z.array(messageSchema));

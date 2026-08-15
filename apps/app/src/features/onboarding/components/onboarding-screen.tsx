@@ -41,7 +41,7 @@ export const OnboardingScreen = () => {
   const finish = (completed: ProfileDraft) => {
     void save(completed).then((saved) => {
       if (saved) {
-        void navigate({ replace: true, to: "/" });
+        void navigate({ replace: true, search: { thread: "" }, to: "/" });
       }
     });
   };

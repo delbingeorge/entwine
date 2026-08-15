@@ -62,8 +62,10 @@ func NewService(
 
 const historyDepth = 30
 
-func (s *Service) StartThread(ctx context.Context, userID string) (domain.Thread, error) {
-	thread, err := domain.NewThread(domain.Thread{UserID: userID, Kind: domain.ThreadKindMain})
+func (s *Service) StartThread(
+	ctx context.Context, userID string, kind domain.ThreadKind, title string,
+) (domain.Thread, error) {
+	thread, err := domain.NewThread(domain.Thread{UserID: userID, Kind: kind, Title: title})
 	if err != nil {
 		return domain.Thread{}, err
 	}
@@ -111,7 +113,8 @@ func (s *Service) DeleteThread(ctx context.Context, threadID, userID string) err
 func (s *Service) Reply(
 	ctx context.Context, userID, threadID, text string, emit func(string) error,
 ) error {
-	if _, err := s.threads.Get(ctx, threadID, userID); err != nil {
+	thread, err := s.threads.Get(ctx, threadID, userID)
+	if err != nil {
 		return fmt.Errorf("get thread: %w", err)
 	}
 
@@ -144,7 +147,7 @@ func (s *Service) Reply(
 
 	var reply strings.Builder
 
-	streamErr := s.responder.Stream(ctx, s.systemPrompt(ctx, userID), messages, func(token string) error {
+	streamErr := s.responder.Stream(ctx, s.systemPrompt(ctx, userID, thread), messages, func(token string) error {
 		reply.WriteString(token)
 
 		return emit(token)
@@ -170,10 +173,16 @@ func (s *Service) Reply(
 	return nil
 }
 
-func (s *Service) systemPrompt(ctx context.Context, userID string) string {
+func (s *Service) systemPrompt(
+	ctx context.Context, userID string, thread domain.Thread,
+) string {
 	var builder strings.Builder
 
 	builder.WriteString(persona)
+
+	if thread.Kind == domain.ThreadKindCoaching {
+		fmt.Fprintf(&builder, coachingBrief, thread.Title)
+	}
 
 	profile, err := s.profiles.GetByUserID(ctx, userID)
 	if err != nil {

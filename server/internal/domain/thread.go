@@ -9,8 +9,9 @@ import (
 type ThreadKind string
 
 const (
-	ThreadKindMain ThreadKind = "main"
-	ThreadKindJob  ThreadKind = "job"
+	ThreadKindMain     ThreadKind = "main"
+	ThreadKindJob      ThreadKind = "job"
+	ThreadKindCoaching ThreadKind = "coaching"
 )
 
 type MessageRole string
@@ -51,11 +52,20 @@ func NewThread(thread Thread) (Thread, error) {
 		thread.Kind = ThreadKindMain
 	}
 
-	if thread.Kind != ThreadKindMain && thread.Kind != ThreadKindJob {
+	if !thread.Kind.isKnown() {
 		return Thread{}, fmt.Errorf("thread kind %q is unknown: %w", thread.Kind, ErrInvalidProfile)
 	}
 
 	return thread, nil
+}
+
+func (k ThreadKind) isKnown() bool {
+	switch k {
+	case ThreadKindMain, ThreadKindJob, ThreadKindCoaching:
+		return true
+	default:
+		return false
+	}
 }
 
 func NewChatMessage(message ChatMessage) (ChatMessage, error) {

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -25,6 +26,11 @@ type messageResponse struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+type newThreadRequest struct {
+	Kind  string `json:"kind"`
+	Title string `json:"title"`
+}
+
 func handleCreateThread(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -35,8 +41,26 @@ func handleCreateThread(logger *slog.Logger, chats ChatService) http.HandlerFunc
 			return
 		}
 
-		thread, err := chats.StartThread(ctx, current.user.ID)
+		var request newThreadRequest
+
+		decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxProfileBody))
+		decoder.DisallowUnknownFields()
+
+		if err := decoder.Decode(&request); err != nil {
+			logger.WarnContext(ctx, "thread body rejected", slog.Any("error", err))
+			writeError(ctx, logger, w, http.StatusBadRequest, "invalid_body", "could not read that")
+
+			return
+		}
+
+		thread, err := chats.StartThread(
+			ctx, current.user.ID, domain.ThreadKind(request.Kind), request.Title)
 		if err != nil {
+			if errors.Is(err, domain.ErrInvalidProfile) {
+				writeError(ctx, logger, w, http.StatusBadRequest, "invalid_thread", "unknown chat kind")
+				return
+			}
+
 			logger.ErrorContext(ctx, "start thread", slog.Any("error", err))
 			writeError(ctx, logger, w, http.StatusInternalServerError, "internal", "could not start")
 
