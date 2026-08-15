@@ -5,6 +5,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/shared/lib/supabase";
 
 import { getMe } from "@/features/auth/api/get-me";
+import { SigningIn } from "@/features/auth/components/signing-in";
 
 export const Route = createFileRoute("/auth/callback")({
   component: AuthCallbackPage,
@@ -35,11 +36,5 @@ function AuthCallbackPage() {
     };
   }, [navigate]);
 
-  return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-2 px-6">
-      <p className="text-sm text-ink-muted" role={failure === null ? undefined : "alert"}>
-        {failure ?? "Signing you in…"}
-      </p>
-    </main>
-  );
+  return <SigningIn failure={failure} />;
 }

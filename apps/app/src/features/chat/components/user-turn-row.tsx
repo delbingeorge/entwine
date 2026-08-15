@@ -1,17 +1,17 @@
 import { useRiseIn } from "../hooks/use-rise-in";
 
 import { SentChip } from "./attachment-chip";
+import { CopyButton } from "./copy-button";
 import { ActionButton, ActionRow } from "./message-actions";
 
 import type { UserTurn } from "../types";
 
 interface UserTurnRowProps {
-  onCopy: () => void;
   onEdit: () => void;
   turn: UserTurn;
 }
 
-export const UserTurnRow = ({ onCopy, onEdit, turn }: UserTurnRowProps) => (
+export const UserTurnRow = ({ onEdit, turn }: UserTurnRowProps) => (
   <div ref={useRiseIn()}>
     <div className="group flex flex-col items-end gap-1.5">
       <div className="flex max-w-[80%] flex-col items-end gap-1.5">
@@ -24,7 +24,7 @@ export const UserTurnRow = ({ onCopy, onEdit, turn }: UserTurnRowProps) => (
       </div>
       <ActionRow>
         <div className="flex items-center gap-0.5">
-          <ActionButton label="Copy" name="copy" onClick={onCopy} />
+          <CopyButton text={turn.text} />
           <ActionButton label="Edit" name="pencil" onClick={onEdit} />
         </div>
       </ActionRow>

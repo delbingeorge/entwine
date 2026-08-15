@@ -1,4 +1,25 @@
 const paths = {
+  "chevron-left": <path d="m15 18-6-6 6-6" />,
+  "log-out": (
+    <>
+      <path d="m16 17 5-5-5-5" />
+      <path d="M21 12H9" />
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    </>
+  ),
+  "corner-down-left": (
+    <>
+      <path d="M20 4v7a4 4 0 0 1-4 4H4" />
+      <path d="m9 10-5 5 5 5" />
+    </>
+  ),
+  search: (
+    <>
+      <path d="m21 21-4.34-4.34" />
+      <circle cx="11" cy="11" r="8" />
+    </>
+  ),
+  check: <path d="M20 6 9 17l-5-5" />,
   "arrow-up": (
     <>
       <path d="m5 12 7-7 7 7" />

@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
 
+import { LucideIcon } from "@/shared/components/lucide-icon";
+
 import { useCardBreathe } from "../hooks/use-card-breathe";
 import { useRiseIn } from "../hooks/use-rise-in";
 
 import { AttachmentChip } from "./attachment-chip";
 import { ComposerField } from "./composer-field";
-import { LucideIcon } from "./lucide-icon";
 
 import type { Attachment } from "../types";
 

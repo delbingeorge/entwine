@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { gsap } from "gsap";
 
-import { prefersReducedMotion } from "../lib/reduced-motion";
+import { prefersReducedMotion } from "@/shared/lib/reduced-motion";
 
 const resting = "0 1px 2px rgba(0, 0, 0, 0.04)";
 const pulsing = "0 1px 2px rgba(0, 0, 0, 0.04), 0 0 0 4px rgba(139, 92, 246, 0.1)";

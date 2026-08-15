@@ -1,11 +1,10 @@
 import { useEffect, useRef } from "react";
 
-import { BrandMark } from "@/shared/components/brand-mark";
-
 import { useChat } from "../hooks/use-chat";
 import { classifyFile, humanSize } from "../lib/classify-file";
 
 import { AgentTurnRow } from "./agent-turn-row";
+import { ChatHeader } from "./chat-header";
 import { Composer } from "./composer";
 import { ThinkingRow } from "./thinking-row";
 import { UserTurnRow } from "./user-turn-row";
@@ -26,9 +25,7 @@ export const ChatScreen = () => {
 
   return (
     <div className="flex h-screen flex-col bg-surface">
-      <header className="flex h-14 shrink-0 items-center px-8">
-        <BrandMark />
-      </header>
+      <ChatHeader />
 
       <div className="grid min-h-0 flex-1 px-8 pb-4" style={{ gridTemplateRows: "1fr auto" }}>
         <div className="min-h-0 overflow-y-auto" ref={scrollerRef}>
@@ -39,9 +36,6 @@ export const ChatScreen = () => {
                   return (
                     <UserTurnRow
                       key={turn.id}
-                      onCopy={() => {
-                        void navigator.clipboard.writeText(turn.text);
-                      }}
                       onEdit={() => {
                         chat.startEdit(turn);
                       }}
@@ -57,9 +51,6 @@ export const ChatScreen = () => {
                 return (
                   <AgentTurnRow
                     key={turn.id}
-                    onCopy={() => {
-                      void navigator.clipboard.writeText(turn.html.replace(/<[^>]+>/gu, ""));
-                    }}
                     onRetry={() => {
                       chat.retry(turn.id);
                     }}

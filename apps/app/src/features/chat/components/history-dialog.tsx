@@ -1,0 +1,206 @@
+import { useEffect, useState } from "react";
+
+import { PenNewSquareIcon } from "@solar-icons/react/linear/pen-new-square";
+
+import { LucideIcon } from "@/shared/components/lucide-icon";
+
+import { useDialogTransition } from "../hooks/use-dialog-transition";
+
+import { HistoryRow } from "./history-row";
+
+import type { Thread } from "../types";
+
+interface HistoryDialogProps {
+  currentId: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onDelete: (id: string) => void;
+  onNew: () => void;
+  onSelect: (id: string) => void;
+  threads: Thread[];
+}
+
+const rowId = (index: number) => `history-option-${String(index)}`;
+
+export const HistoryDialog = ({
+  currentId,
+  isOpen,
+  onClose,
+  onDelete,
+  onNew,
+  onSelect,
+  threads,
+}: HistoryDialogProps) => {
+  const { isMounted, panelRef, scrimRef } = useDialogTransition(isOpen);
+  const [query, setQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(() =>
+    Math.max(
+      0,
+      threads.findIndex((thread) => thread.id === currentId),
+    ),
+  );
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  const needle = query.trim().toLowerCase();
+  const hits = threads.filter(
+    (thread) => needle === "" || `${thread.title} ${thread.preview}`.toLowerCase().includes(needle),
+  );
+
+  const options = hits.length + 1;
+  const safeIndex = activeIndex >= options ? 0 : activeIndex;
+  const isNewActive = safeIndex === hits.length;
+
+  const choose = (index: number) => {
+    const thread = hits[index];
+
+    if (thread === undefined) {
+      onNew();
+      return;
+    }
+
+    onSelect(thread.id);
+  };
+
+  if (!isMounted) {
+    return null;
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-6 pt-[14vh] font-ui"
+      ref={scrimRef}
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        aria-label="Your chats"
+        className="flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-composer-line bg-composer-surface shadow-[0_24px_64px_rgba(0,0,0,0.3)]"
+        onClick={(event) => {
+          event.stopPropagation();
+        }}
+        ref={panelRef}
+        role="dialog"
+      >
+        <label className="flex shrink-0 items-center gap-3 border-b border-composer-line px-4 py-3">
+          <LucideIcon className="size-4 shrink-0 text-composer-soft" name="search" />
+          <input
+            aria-activedescendant={rowId(safeIndex)}
+            aria-controls="history-options"
+            aria-expanded
+            autoFocus
+            className="composer-field w-full bg-transparent text-[13.5px] text-composer-ink outline-none placeholder:text-composer-placeholder"
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setActiveIndex(0);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowDown") {
+                event.preventDefault();
+                setActiveIndex((safeIndex + 1) % options);
+              }
+
+              if (event.key === "ArrowUp") {
+                event.preventDefault();
+                setActiveIndex((safeIndex - 1 + options) % options);
+              }
+
+              if (event.key === "Enter") {
+                event.preventDefault();
+                choose(safeIndex);
+              }
+            }}
+            placeholder="Search your chats"
+            role="combobox"
+            value={query}
+          />
+          <kbd className="shrink-0 rounded bg-composer-track px-1.5 py-0.5 text-[10px] text-composer-soft">
+            ESC
+          </kbd>
+        </label>
+
+        <div className="overflow-y-auto py-1" id="history-options" role="listbox">
+          <div>
+            <p className="px-4 pt-2.5 pb-1 text-[10px] tracking-widest text-composer-placeholder">
+              CHATS
+            </p>
+            {hits.length === 0 ? (
+              <p className="px-4 py-3 text-[12.5px] text-composer-placeholder">
+                No chats match that search.
+              </p>
+            ) : (
+              hits.map((thread, index) => (
+                <HistoryRow
+                  id={rowId(index)}
+                  isActive={index === safeIndex}
+                  isCurrent={thread.id === currentId}
+                  key={thread.id}
+                  onDelete={() => {
+                    onDelete(thread.id);
+                  }}
+                  onHover={() => {
+                    setActiveIndex(index);
+                  }}
+                  onSelect={() => {
+                    onSelect(thread.id);
+                  }}
+                  thread={thread}
+                />
+              ))
+            )}
+          </div>
+
+          <div>
+            <p className="px-4 pt-2.5 pb-1 text-[10px] tracking-widest text-composer-placeholder">
+              ACTIONS
+            </p>
+            <div
+              aria-selected={isNewActive}
+              className={`group flex w-full items-center pr-2 ${isNewActive ? "bg-composer-track" : ""}`}
+              id={rowId(hits.length)}
+              onMouseMove={() => {
+                setActiveIndex(hits.length);
+              }}
+              role="option"
+            >
+              <button
+                className="flex min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left"
+                onClick={onNew}
+                tabIndex={-1}
+                type="button"
+              >
+                <PenNewSquareIcon className="size-4 shrink-0 text-composer-soft" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13.5px] text-composer-ink">
+                    Start a new chat…
+                  </span>
+                  <span className="block truncate font-mono text-[11px] text-composer-placeholder">
+                    Ask Ellie something else
+                  </span>
+                </span>
+                {isNewActive ? (
+                  <LucideIcon
+                    className="size-3.5 shrink-0 text-composer-placeholder"
+                    name="corner-down-left"
+                  />
+                ) : null}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

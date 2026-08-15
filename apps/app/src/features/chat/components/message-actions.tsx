@@ -1,29 +1,44 @@
-import { LucideIcon, type LucideName } from "./lucide-icon";
+import type { ReactNode } from "react";
+
+import { LucideIcon, type LucideName } from "@/shared/components/lucide-icon";
 
 interface ActionButtonProps {
+  isFilled?: boolean;
+  isHighlighted?: boolean;
   isPressed?: boolean;
   label: string;
   name: LucideName;
   onClick: () => void;
 }
 
-export const ActionButton = ({ isPressed, label, name, onClick }: ActionButtonProps) => (
-  <button
-    aria-label={label}
-    aria-pressed={isPressed}
-    className={`flex size-7 items-center justify-center rounded-md hover:bg-composer-track hover:text-composer-ink ${
-      isPressed === true ? "bg-composer-track text-composer-ink" : "text-composer-soft"
-    }`}
-    onClick={onClick}
-    title={label}
-    type="button"
-  >
-    <LucideIcon className="size-3.5" name={name} />
-  </button>
-);
+export const ActionButton = ({
+  isFilled = false,
+  isHighlighted = false,
+  isPressed,
+  label,
+  name,
+  onClick,
+}: ActionButtonProps) => {
+  const isActive = isHighlighted || isPressed === true;
+
+  return (
+    <button
+      aria-label={label}
+      aria-pressed={isPressed}
+      className={`flex size-7 items-center justify-center rounded-md transition-colors hover:bg-composer-track hover:text-composer-ink ${
+        isActive ? "bg-composer-track text-composer-ink" : "text-composer-soft"
+      }`}
+      onClick={onClick}
+      title={label}
+      type="button"
+    >
+      <LucideIcon className={`size-3.5 ${isFilled ? "fill-current" : ""}`} name={name} />
+    </button>
+  );
+};
 
 interface ActionRowProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }
 

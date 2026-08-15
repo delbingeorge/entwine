@@ -1,3 +1,9 @@
+export interface Thread {
+  id: string;
+  preview: string;
+  title: string;
+}
+
 export type AttachmentKind = "pdf" | "text" | "code" | "image";
 
 export interface Attachment {

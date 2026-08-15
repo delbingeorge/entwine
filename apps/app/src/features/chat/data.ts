@@ -1,6 +1,15 @@
-import type { Attachment } from "./types";
+import type { Attachment, Thread } from "./types";
 
 export const agentName = "Ellie";
+
+export const currentThreadId = "t1";
+
+export const threads: Thread[] = [
+  { id: "t1", title: "Senior backend roles, remote", preview: "Go and Postgres · today" },
+  { id: "t2", title: "Is 32L realistic for my level?", preview: "salary check · yesterday" },
+  { id: "t3", title: "Bengaluru vs fully remote", preview: "location trade-offs · 3 days ago" },
+  { id: "t4", title: "Resume review before applying", preview: "Delbin_George.pdf · last week" },
+];
 
 export const seededAttachment: Attachment = {
   id: 1,

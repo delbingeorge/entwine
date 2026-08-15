@@ -1,6 +1,6 @@
-import { kindIcon } from "../lib/classify-file";
+import { LucideIcon } from "@/shared/components/lucide-icon";
 
-import { LucideIcon } from "./lucide-icon";
+import { kindIcon } from "../lib/classify-file";
 
 import type { Attachment } from "../types";
 

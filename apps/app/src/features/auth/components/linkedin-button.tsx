@@ -1,6 +1,6 @@
-import { useLinkedInSignIn } from "../hooks/use-linkedin-sign-in";
+import { LinkedInIcon } from "@/shared/components/linkedin-icon";
 
-import { LinkedInIcon } from "./linkedin-icon";
+import { useLinkedInSignIn } from "../hooks/use-linkedin-sign-in";
 
 export const LinkedInButton = () => {
   const { hasFailed, isPending, signIn } = useLinkedInSignIn();

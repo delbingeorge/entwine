@@ -3,9 +3,10 @@ import { useEffect, useRef } from "react";
 import { CatIcon } from "@solar-icons/react/linear/cat";
 import { gsap } from "gsap";
 
+import { prefersReducedMotion } from "@/shared/lib/reduced-motion";
+
 import { agentName } from "../data";
 import { useRiseIn } from "../hooks/use-rise-in";
-import { prefersReducedMotion } from "../lib/reduced-motion";
 
 export const ThinkingRow = () => {
   const riseRef = useRiseIn();

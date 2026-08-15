@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { gsap } from "gsap";
 
-import { prefersReducedMotion } from "../lib/reduced-motion";
+import { prefersReducedMotion } from "@/shared/lib/reduced-motion";
 
 export const useRiseIn = () => {
   const ref = useRef<HTMLDivElement>(null);
