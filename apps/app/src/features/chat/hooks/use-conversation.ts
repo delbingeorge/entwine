@@ -1,33 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 
-import { streamChat, type ChatMessage } from "@/shared/lib/chat-api";
+import { streamChat } from "@/shared/lib/chat-api";
+import { getThreadMessages } from "@/shared/lib/thread-api";
 
-import { htmlToText } from "../lib/html-to-text";
 import { renderMarkdown } from "../lib/render-markdown";
 
 import type { Attachment, Turn, UserTurn } from "../types";
 
 interface ConversationOptions {
+  onSettled?: () => void;
   seed: Turn[];
+  threadId: string | null;
 }
 
-const asHistory = (turns: Turn[]): ChatMessage[] =>
-  turns.flatMap<ChatMessage>((turn) => {
-    if (turn.role === "user") {
-      const text =
-        turn.attachment === null ? turn.text : `${turn.text}\n\n[attached ${turn.attachment.name}]`;
-
-      return text.trim() === "" ? [] : [{ role: "user", text }];
-    }
-
-    if (turn.role === "agent" && turn.html !== "") {
-      return [{ role: "agent", text: htmlToText(turn.html) }];
-    }
-
-    return [];
-  });
-
-export const useConversation = ({ seed }: ConversationOptions) => {
+export const useConversation = ({ onSettled, seed, threadId }: ConversationOptions) => {
   const [turns, setTurns] = useState<Turn[]>(seed);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [value, setValue] = useState("");
@@ -43,7 +29,52 @@ export const useConversation = ({ seed }: ConversationOptions) => {
     [],
   );
 
-  const respond = async (history: ChatMessage[]) => {
+  useEffect(() => {
+    if (threadId === null) {
+      return;
+    }
+
+    let isStale = false;
+
+    getThreadMessages(threadId)
+      .then((stored) => {
+        if (isStale) {
+          return;
+        }
+
+        if (stored.length === 0) {
+          setTurns(seed);
+          return;
+        }
+
+        setTurns(
+          stored.map((message, index) =>
+            message.role === "user"
+              ? { id: index + 1, role: "user", text: message.content, attachment: null }
+              : {
+                  id: index + 1,
+                  role: "agent",
+                  html: renderMarkdown(message.content),
+                  isStreaming: false,
+                },
+          ),
+        );
+      })
+      .catch((cause: unknown) => {
+        console.error("could not load this chat", cause);
+      });
+
+    return () => {
+      isStale = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threadId]);
+
+  const respond = async (text: string) => {
+    if (threadId === null) {
+      return;
+    }
+
     setIsBusy(true);
 
     const thinkingId = nextId.current++;
@@ -58,7 +89,8 @@ export const useConversation = ({ seed }: ConversationOptions) => {
 
     try {
       await streamChat({
-        messages: history,
+        text,
+        threadId,
         signal: controller.signal,
         onToken: (token) => {
           markdown += token;
@@ -105,6 +137,7 @@ export const useConversation = ({ seed }: ConversationOptions) => {
       ]);
     } finally {
       setIsBusy(false);
+      onSettled?.();
     }
   };
 
@@ -133,14 +166,16 @@ export const useConversation = ({ seed }: ConversationOptions) => {
     }
 
     const sent = attachment;
-    const asked: Turn = { id: nextId.current++, role: "user", text, attachment: sent };
-    const next = [...turns, asked];
+    const asked = text === "" ? `Shared ${sent?.name ?? "a file"}` : text;
 
-    setTurns(next);
+    setTurns((current) => [
+      ...current,
+      { id: nextId.current++, role: "user", text: asked, attachment: sent },
+    ]);
     setValue("");
     setAttachment(null);
     setEditing(null);
-    void respond(asHistory(next));
+    void respond(asked);
   };
 
   return {
@@ -155,25 +190,23 @@ export const useConversation = ({ seed }: ConversationOptions) => {
         return;
       }
 
-      const trimmed = turns.slice(
-        0,
-        turns.findIndex((turn) => turn.id === turnId),
-      );
+      const previous = turns
+        .slice(
+          0,
+          turns.findIndex((turn) => turn.id === turnId),
+        )
+        .reverse()
+        .find((turn) => turn.role === "user");
 
-      setTurns(trimmed);
-      void respond(asHistory(trimmed));
+      if (previous?.role === "user") {
+        void respond(previous.text);
+      }
     },
     setAttachment,
     setValue,
     startEdit: (turn: UserTurn) => {
       setEditing(turn.id);
       setValue(turn.text);
-      setTurns((current) =>
-        current.slice(
-          0,
-          current.findIndex((entry) => entry.id === turn.id),
-        ),
-      );
     },
     submit,
     turns,

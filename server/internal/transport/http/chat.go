@@ -5,21 +5,24 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 
-	"github.com/octane/entwine/server/internal/usecase/chat"
+	"github.com/octane/entwine/server/internal/domain"
 )
 
 type ChatService interface {
-	Reply(ctx context.Context, userID string, messages []chat.Message, emit func(string) error) error
+	StartThread(ctx context.Context, userID string) (domain.Thread, error)
+	ListThreads(ctx context.Context, userID string) ([]domain.Thread, error)
+	History(ctx context.Context, threadID, userID string) ([]domain.ChatMessage, error)
+	DeleteThread(ctx context.Context, threadID, userID string) error
+	Reply(ctx context.Context, userID, threadID, text string, emit func(string) error) error
 }
 
 const maxChatBody = 1 << 18
 
 type chatRequest struct {
-	Messages []struct {
-		Role string `json:"role"`
-		Text string `json:"text"`
-	} `json:"messages"`
+	ThreadID string `json:"threadId"`
+	Text     string `json:"text"`
 }
 
 func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
@@ -43,8 +46,8 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 			return
 		}
 
-		if len(request.Messages) == 0 {
-			writeError(ctx, logger, w, http.StatusBadRequest, "invalid_body", "no messages")
+		if request.ThreadID == "" || strings.TrimSpace(request.Text) == "" {
+			writeError(ctx, logger, w, http.StatusBadRequest, "invalid_body", "thread and text are required")
 			return
 		}
 
@@ -52,11 +55,6 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 		if !canFlush {
 			writeError(ctx, logger, w, http.StatusInternalServerError, "internal", "cannot stream")
 			return
-		}
-
-		messages := make([]chat.Message, 0, len(request.Messages))
-		for _, message := range request.Messages {
-			messages = append(messages, chat.Message{Role: message.Role, Text: message.Text})
 		}
 
 		w.Header().Set("Content-Type", "text/event-stream")
@@ -81,7 +79,7 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 			return nil
 		}
 
-		if err := chats.Reply(ctx, current.user.ID, messages, emit); err != nil {
+		if err := chats.Reply(ctx, current.user.ID, request.ThreadID, request.Text, emit); err != nil {
 			logger.ErrorContext(ctx, "chat reply", slog.Any("error", err))
 			writeStreamError(w, flusher)
 

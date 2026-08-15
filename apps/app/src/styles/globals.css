@@ -30,4 +30,12 @@
   .composer-field:focus-visible {
     outline: none;
   }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }

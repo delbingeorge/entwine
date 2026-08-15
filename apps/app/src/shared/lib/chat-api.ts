@@ -2,15 +2,11 @@ import { AppError } from "./api-client";
 import { env } from "./env";
 import { getSession } from "./session";
 
-export interface ChatMessage {
-  role: "agent" | "user";
-  text: string;
-}
-
 interface StreamOptions {
-  messages: ChatMessage[];
   onToken: (token: string) => void;
   signal?: AbortSignal;
+  text: string;
+  threadId: string;
 }
 
 const decodeEvent = (block: string) => {
@@ -30,7 +26,7 @@ const decodeEvent = (block: string) => {
   }
 };
 
-export const streamChat = async ({ messages, onToken, signal }: StreamOptions) => {
+export const streamChat = async ({ onToken, signal, text, threadId }: StreamOptions) => {
   const session = await getSession();
 
   if (session === null) {
@@ -43,7 +39,7 @@ export const streamChat = async ({ messages, onToken, signal }: StreamOptions) =
       "Content-Type": "application/json",
       Authorization: `Bearer ${session.access_token}`,
     },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ threadId, text }),
     signal,
   });
 

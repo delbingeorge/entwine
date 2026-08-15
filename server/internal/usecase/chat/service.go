@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/octane/entwine/server/internal/domain"
 )
@@ -18,6 +19,15 @@ type Responder interface {
 	Stream(ctx context.Context, system string, messages []Message, emit func(string) error) error
 }
 
+type ThreadRepository interface {
+	Create(ctx context.Context, thread domain.Thread, now time.Time) (domain.Thread, error)
+	ListByUser(ctx context.Context, userID string) ([]domain.Thread, error)
+	Get(ctx context.Context, threadID, userID string) (domain.Thread, error)
+	Delete(ctx context.Context, threadID, userID string) error
+	Messages(ctx context.Context, threadID string) ([]domain.ChatMessage, error)
+	Append(ctx context.Context, message domain.ChatMessage, now time.Time) (domain.ChatMessage, error)
+}
+
 type ProfileReader interface {
 	GetByUserID(ctx context.Context, userID string) (domain.CandidateProfile, error)
 }
@@ -28,25 +38,133 @@ type DetailReader interface {
 
 type Service struct {
 	responder Responder
+	threads   ThreadRepository
 	profiles  ProfileReader
 	details   DetailReader
+	now       func() time.Time
 }
 
-func NewService(responder Responder, profiles ProfileReader, details DetailReader) *Service {
-	return &Service{responder: responder, profiles: profiles, details: details}
+func NewService(
+	responder Responder,
+	threads ThreadRepository,
+	profiles ProfileReader,
+	details DetailReader,
+	now func() time.Time,
+) *Service {
+	return &Service{
+		responder: responder,
+		threads:   threads,
+		profiles:  profiles,
+		details:   details,
+		now:       now,
+	}
+}
+
+const historyDepth = 30
+
+func (s *Service) StartThread(ctx context.Context, userID string) (domain.Thread, error) {
+	thread, err := domain.NewThread(domain.Thread{UserID: userID, Kind: domain.ThreadKindMain})
+	if err != nil {
+		return domain.Thread{}, err
+	}
+
+	created, err := s.threads.Create(ctx, thread, s.now())
+	if err != nil {
+		return domain.Thread{}, fmt.Errorf("start thread: %w", err)
+	}
+
+	return created, nil
+}
+
+func (s *Service) ListThreads(ctx context.Context, userID string) ([]domain.Thread, error) {
+	threads, err := s.threads.ListByUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("list threads: %w", err)
+	}
+
+	return threads, nil
+}
+
+func (s *Service) History(
+	ctx context.Context, threadID, userID string,
+) ([]domain.ChatMessage, error) {
+	if _, err := s.threads.Get(ctx, threadID, userID); err != nil {
+		return nil, fmt.Errorf("get thread: %w", err)
+	}
+
+	messages, err := s.threads.Messages(ctx, threadID)
+	if err != nil {
+		return nil, fmt.Errorf("read history: %w", err)
+	}
+
+	return messages, nil
+}
+
+func (s *Service) DeleteThread(ctx context.Context, threadID, userID string) error {
+	if err := s.threads.Delete(ctx, threadID, userID); err != nil {
+		return fmt.Errorf("delete thread: %w", err)
+	}
+
+	return nil
 }
 
 func (s *Service) Reply(
-	ctx context.Context, userID string, messages []Message, emit func(string) error,
+	ctx context.Context, userID, threadID, text string, emit func(string) error,
 ) error {
-	if len(messages) == 0 {
-		return fmt.Errorf("no messages: %w", domain.ErrInvalidProfile)
+	if _, err := s.threads.Get(ctx, threadID, userID); err != nil {
+		return fmt.Errorf("get thread: %w", err)
 	}
 
-	system := s.systemPrompt(ctx, userID)
+	asked, err := domain.NewChatMessage(domain.ChatMessage{
+		ThreadID: threadID,
+		Role:     domain.MessageRoleUser,
+		Content:  text,
+	})
+	if err != nil {
+		return err
+	}
 
-	if err := s.responder.Stream(ctx, system, messages, emit); err != nil {
-		return fmt.Errorf("stream reply: %w", err)
+	if _, err := s.threads.Append(ctx, asked, s.now()); err != nil {
+		return fmt.Errorf("store question: %w", err)
+	}
+
+	stored, err := s.threads.Messages(ctx, threadID)
+	if err != nil {
+		return fmt.Errorf("read history: %w", err)
+	}
+
+	if len(stored) > historyDepth {
+		stored = stored[len(stored)-historyDepth:]
+	}
+
+	messages := make([]Message, 0, len(stored))
+	for _, message := range stored {
+		messages = append(messages, Message{Role: string(message.Role), Text: message.Content})
+	}
+
+	var reply strings.Builder
+
+	streamErr := s.responder.Stream(ctx, s.systemPrompt(ctx, userID), messages, func(token string) error {
+		reply.WriteString(token)
+
+		return emit(token)
+	})
+
+	if reply.Len() > 0 {
+		answered, buildErr := domain.NewChatMessage(domain.ChatMessage{
+			ThreadID: threadID,
+			Role:     domain.MessageRoleAgent,
+			Content:  reply.String(),
+		})
+		if buildErr == nil {
+			if _, appendErr := s.threads.Append(ctx, answered, s.now()); appendErr != nil {
+				return fmt.Errorf("store answer: %w", appendErr)
+			}
+		}
+	}
+
+	if streamErr != nil {
+		return fmt.Errorf("stream reply: %w", streamErr)
 	}
 
 	return nil

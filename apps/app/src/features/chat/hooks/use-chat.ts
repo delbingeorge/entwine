@@ -15,4 +15,10 @@ const greeting: Turn[] = [
   },
 ];
 
-export const useChat = () => useConversation({ seed: greeting });
+interface ChatOptions {
+  onSettled: () => void;
+  threadId: string | null;
+}
+
+export const useChat = ({ onSettled, threadId }: ChatOptions) =>
+  useConversation({ onSettled, seed: greeting, threadId });

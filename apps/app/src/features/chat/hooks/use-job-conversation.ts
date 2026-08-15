@@ -12,5 +12,5 @@ const openingPost = (job: Job) =>
 export const useJobConversation = (job: Job) => {
   const seed: Turn[] = [{ id: 1, role: "agent", html: openingPost(job), isStreaming: false }];
 
-  return useConversation({ seed });
+  return useConversation({ seed, threadId: null });
 };

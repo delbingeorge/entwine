@@ -4,13 +4,14 @@ import { ChatRoundIcon } from "@solar-icons/react/linear/chat-round";
 import { PenNewSquareIcon } from "@solar-icons/react/linear/pen-new-square";
 
 import { LucideIcon } from "@/shared/components/lucide-icon";
+import type { ThreadSummary } from "@/shared/lib/thread-api";
 
 import { useDialogTransition } from "../hooks/use-dialog-transition";
 
 import { HistoryRow } from "./history-row";
 import { JobStatusChip } from "./job-status-chip";
 
-import type { Job, JobStatus, Thread } from "../types";
+import type { Job, JobStatus } from "../types";
 
 interface HistoryDialogProps {
   currentId: string;
@@ -21,7 +22,7 @@ interface HistoryDialogProps {
   onDelete: (id: string) => void;
   onNew: () => void;
   onSelect: (id: string) => void;
-  threads: Thread[];
+  threads: ThreadSummary[];
 }
 
 const rowId = (index: number) => `history-option-${String(index)}`;
@@ -62,7 +63,7 @@ export const HistoryDialog = ({
 
   const needle = query.trim().toLowerCase();
   const hits = threads.filter(
-    (thread) => needle === "" || `${thread.title} ${thread.preview}`.toLowerCase().includes(needle),
+    (thread) => needle === "" || thread.title.toLowerCase().includes(needle),
   );
 
   const options = hits.length + 1;

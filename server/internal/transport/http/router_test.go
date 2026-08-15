@@ -12,7 +12,6 @@ import (
 
 	"github.com/octane/entwine/server/internal/domain"
 	transporthttp "github.com/octane/entwine/server/internal/transport/http"
-	"github.com/octane/entwine/server/internal/usecase/chat"
 	"github.com/octane/entwine/server/internal/usecase/profile"
 )
 
@@ -66,9 +65,23 @@ func (f *fakeDetails) ImportResume(
 
 type fakeChats struct{}
 
-func (f *fakeChats) Reply(
-	_ context.Context, _ string, _ []chat.Message, _ func(string) error,
-) error {
+func (f *fakeChats) StartThread(_ context.Context, _ string) (domain.Thread, error) {
+	return domain.Thread{}, nil
+}
+
+func (f *fakeChats) ListThreads(_ context.Context, _ string) ([]domain.Thread, error) {
+	return nil, nil
+}
+
+func (f *fakeChats) History(_ context.Context, _, _ string) ([]domain.ChatMessage, error) {
+	return nil, nil
+}
+
+func (f *fakeChats) DeleteThread(_ context.Context, _, _ string) error {
+	return nil
+}
+
+func (f *fakeChats) Reply(_ context.Context, _, _, _ string, _ func(string) error) error {
 	return nil
 }
 

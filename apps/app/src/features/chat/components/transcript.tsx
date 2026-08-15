@@ -35,7 +35,7 @@ export const Transcript = ({
   }, [turns]);
 
   return (
-    <div className="min-h-0 overflow-y-auto [scrollbar-gutter:stable_both-edges]" ref={scrollerRef}>
+    <div className="no-scrollbar min-h-0 overflow-y-auto" ref={scrollerRef}>
       <div className="mx-auto w-full max-w-2xl">
         <div className="flex flex-col gap-6 pt-6 pb-8 font-ui">
           {turns.map((turn) => {

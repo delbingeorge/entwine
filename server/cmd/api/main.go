@@ -65,7 +65,7 @@ func run(logger *slog.Logger) error {
 	details := profile.NewDetailService(profileRepo, detailRepo, parser, time.Now)
 	chats := chat.NewService(
 		llm.NewGeminiResponder(llm.GeminiConfig{APIKey: cfg.GeminiAPIKey, Model: cfg.GeminiModel}),
-		profileRepo, detailRepo)
+		postgres.NewThreadRepo(db), profileRepo, detailRepo, time.Now)
 
 	server := &http.Server{
 		Addr:              net.JoinHostPort("", strconv.Itoa(cfg.Port)),

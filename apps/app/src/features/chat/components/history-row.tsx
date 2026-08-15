@@ -4,8 +4,9 @@ import { ChatRoundIcon } from "@solar-icons/react/linear/chat-round";
 import { TrashBinTrashIcon } from "@solar-icons/react/linear/trash-bin-trash";
 
 import { LucideIcon } from "@/shared/components/lucide-icon";
+import type { ThreadSummary } from "@/shared/lib/thread-api";
 
-import type { Thread } from "../types";
+import { relativeTime } from "../lib/relative-time";
 
 interface HistoryRowProps {
   id: string;
@@ -14,7 +15,7 @@ interface HistoryRowProps {
   onDelete: () => void;
   onHover: () => void;
   onSelect: () => void;
-  thread: Thread;
+  thread: ThreadSummary;
 }
 
 export const HistoryRow = ({
@@ -51,9 +52,11 @@ export const HistoryRow = ({
       >
         <ChatRoundIcon className="size-4 shrink-0 text-composer-soft" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13.5px] text-composer-ink">{thread.title}</span>
+          <span className="block truncate text-[13.5px] text-composer-ink">
+            {thread.title === "" ? "New chat" : thread.title}
+          </span>
           <span className="block truncate font-mono text-[11px] text-composer-placeholder">
-            {thread.preview}
+            {relativeTime(thread.lastMessageAt)}
           </span>
         </span>
         {isCurrent ? (

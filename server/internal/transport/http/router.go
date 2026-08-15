@@ -32,6 +32,10 @@ func NewRouter(
 	mux.Handle("GET /v1/profile/detail", authenticated(handleGetProfileDetail(logger, details)))
 	mux.Handle("POST /v1/profile/resume", authenticated(handleImportResume(logger, details)))
 	mux.Handle("POST /v1/chat", authenticated(handleChat(logger, chats)))
+	mux.Handle("GET /v1/threads", authenticated(handleListThreads(logger, chats)))
+	mux.Handle("POST /v1/threads", authenticated(handleCreateThread(logger, chats)))
+	mux.Handle("GET /v1/threads/{id}/messages", authenticated(handleThreadMessages(logger, chats)))
+	mux.Handle("DELETE /v1/threads/{id}", authenticated(handleDeleteThread(logger, chats)))
 
 	return withCORS(allowedOrigin)(mux)
 }

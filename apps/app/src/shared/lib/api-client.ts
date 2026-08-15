@@ -49,5 +49,9 @@ export const apiRequest = async <T>(
     throw await toAppError(response);
   }
 
+  if (response.status === 204) {
+    return schema.parse(undefined);
+  }
+
   return schema.parse(await response.json());
 };

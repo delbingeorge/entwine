@@ -2,6 +2,7 @@ import { importResume } from "@/shared/lib/profile-detail-api";
 
 import { useChat } from "../hooks/use-chat";
 import { useJobThreads } from "../hooks/use-job-threads";
+import { useThreads } from "../hooks/use-threads";
 import { classifyFile, humanSize } from "../lib/classify-file";
 
 import { ChatHeader } from "./chat-header";
@@ -12,15 +13,21 @@ import { Transcript } from "./transcript";
 import "../styles/md-body.css";
 
 export const ChatScreen = () => {
-  const chat = useChat();
+  const history = useThreads();
+  const chat = useChat({ onSettled: history.syncTitles, threadId: history.currentId });
   const threads = useJobThreads();
 
   return (
     <div className="flex h-screen flex-col bg-surface">
       <ChatHeader
+        currentThreadId={history.currentId}
+        onDeleteThread={history.remove}
+        onNewThread={history.startNew}
         onOpenJob={threads.open}
+        onSelectThread={history.select}
         startedIds={threads.startedIds}
         statusOf={threads.statusOf}
+        threads={history.threads}
       />
 
       {threads.openJob === undefined ? (

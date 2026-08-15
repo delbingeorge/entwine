@@ -7,8 +7,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { BrandMark } from "@/shared/components/brand-mark";
 import { useLongPress } from "@/shared/hooks/use-long-press";
 import type { SettingsTab } from "@/shared/lib/settings-tabs";
+import type { ThreadSummary } from "@/shared/lib/thread-api";
 
-import { currentThreadId, threads } from "../data";
 import { jobById } from "../jobs";
 
 import { HistoryDialog } from "./history-dialog";
@@ -17,12 +17,26 @@ import { JumpMenu } from "./jump-menu";
 import type { JobStatus } from "../types";
 
 interface ChatHeaderProps {
+  currentThreadId: string | null;
+  onDeleteThread: (id: string) => void;
+  onNewThread: () => void;
   onOpenJob: (id: string) => void;
+  onSelectThread: (id: string) => void;
   startedIds: string[];
   statusOf: (id: string) => JobStatus;
+  threads: ThreadSummary[];
 }
 
-export const ChatHeader = ({ onOpenJob, startedIds, statusOf }: ChatHeaderProps) => {
+export const ChatHeader = ({
+  currentThreadId,
+  onDeleteThread,
+  onNewThread,
+  onOpenJob,
+  onSelectThread,
+  startedIds,
+  statusOf,
+  threads,
+}: ChatHeaderProps) => {
   const navigate = useNavigate();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isJumpOpen, setIsJumpOpen] = useState(false);
@@ -81,22 +95,24 @@ export const ChatHeader = ({ onOpenJob, startedIds, statusOf }: ChatHeaderProps)
         </div>
       </header>
       <HistoryDialog
-        currentId={currentThreadId}
+        currentId={currentThreadId ?? ""}
         isOpen={isHistoryOpen}
         onClose={() => {
           setIsHistoryOpen(false);
         }}
-        onDelete={() => {
-          setIsHistoryOpen(false);
+        onDelete={(id) => {
+          onDeleteThread(id);
         }}
         onNew={() => {
+          onNewThread();
           setIsHistoryOpen(false);
         }}
         onOpenJob={(id) => {
           onOpenJob(id);
           setIsHistoryOpen(false);
         }}
-        onSelect={() => {
+        onSelect={(id) => {
+          onSelectThread(id);
           setIsHistoryOpen(false);
         }}
         jobs={startedIds.flatMap((id) => {

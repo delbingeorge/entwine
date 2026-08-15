@@ -22,12 +22,6 @@ export interface Job {
   title: string;
 }
 
-export interface Thread {
-  id: string;
-  preview: string;
-  title: string;
-}
-
 export interface Attachment {
   id: number;
   kind: AttachmentKind;
