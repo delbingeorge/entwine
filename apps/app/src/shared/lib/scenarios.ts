@@ -61,12 +61,6 @@ export const scenariosByTab: Record<CoachingTab, Scenario[]> = {
       title: "Practise the hiring manager screen",
       subtitle: "Second-round style, deeper than the recruiter call.",
     },
-    {
-      id: "mock",
-      placeholder: "Paste the job description to begin…",
-      title: "Take a mock interview",
-      subtitle: "You finally got the interview. Now what?",
-    },
   ],
 };
 

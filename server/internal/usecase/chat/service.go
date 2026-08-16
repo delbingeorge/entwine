@@ -160,7 +160,10 @@ func (s *Service) Reply(
 			Content:  reply.String(),
 		})
 		if buildErr == nil {
-			if _, appendErr := s.threads.Append(ctx, answered, s.now()); appendErr != nil {
+			// The caller may have walked away mid-reply. Keep what Ellie said.
+			keep := context.WithoutCancel(ctx)
+
+			if _, appendErr := s.threads.Append(keep, answered, s.now()); appendErr != nil {
 				return fmt.Errorf("store answer: %w", appendErr)
 			}
 		}

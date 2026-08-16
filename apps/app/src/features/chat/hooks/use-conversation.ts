@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { streamChat } from "@/shared/lib/chat-api";
-import { getThreadMessages } from "@/shared/lib/thread-api";
 
+import { loadTurns } from "../lib/load-turns";
 import { renderMarkdown } from "../lib/render-markdown";
 import { createReveal } from "../lib/reveal";
 
@@ -14,20 +14,27 @@ interface ConversationOptions {
   threadId: string | null;
 }
 
+type Running = { controller: AbortController; reveal: ReturnType<typeof createReveal> };
+
 export const useConversation = ({ onSettled, seed, threadId }: ConversationOptions) => {
   const [turns, setTurns] = useState<Turn[]>(seed);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [value, setValue] = useState("");
-  const [isBusy, setIsBusy] = useState(false);
+  const [busyThreads, setBusyThreads] = useState<string[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
   const nextId = useRef(1000);
-  const abort = useRef<AbortController | null>(null);
-  const revealRef = useRef<ReturnType<typeof createReveal> | null>(null);
+  const running = useRef(new Map<string, Running>());
+  const openedAt = useRef(0);
+  const threadIdRef = useRef(threadId);
+  threadIdRef.current = threadId;
+  const isBusy = threadId !== null && busyThreads.includes(threadId);
 
   useEffect(
     () => () => {
-      abort.current?.abort();
-      revealRef.current?.kill();
+      running.current.forEach(({ controller, reveal }) => {
+        controller.abort();
+        reveal.kill();
+      });
     },
     [],
   );
@@ -37,61 +44,49 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
       return;
     }
 
-    let isStale = false;
+    openedAt.current += 1;
+    const opened = openedAt.current;
+    const isAwaited = running.current.has(threadId);
 
-    getThreadMessages(threadId)
+    loadTurns(threadId)
       .then((stored) => {
-        if (isStale) {
+        if (openedAt.current !== opened) {
           return;
         }
 
-        if (stored.length === 0) {
+        if (stored.length === 0 && !isAwaited) {
           setTurns(seed);
           return;
         }
 
-        setTurns(
-          stored.map((message, index) =>
-            message.role === "user"
-              ? { id: index + 1, role: "user", text: message.content, attachment: null }
-              : {
-                  id: index + 1,
-                  role: "agent",
-                  html: renderMarkdown(message.content),
-                  isStreaming: false,
-                },
-          ),
-        );
+        setTurns(isAwaited ? [...stored, { id: nextId.current++, role: "thinking" }] : stored);
       })
       .catch((cause: unknown) => {
         console.error("could not load this chat", cause);
       });
-
-    return () => {
-      isStale = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threadId]);
 
-  const respond = async (text: string) => {
-    if (threadId === null) {
-      return;
-    }
+  const respond = async (owner: string, text: string) => {
+    const opened = openedAt.current;
+    const isShowing = () => openedAt.current === opened;
+    const write = (update: (current: Turn[]) => Turn[]) => {
+      if (isShowing()) {
+        setTurns(update);
+      }
+    };
 
-    setIsBusy(true);
+    setBusyThreads((current) => [...current, owner]);
 
     const thinkingId = nextId.current++;
-    setTurns((current) => [...current, { id: thinkingId, role: "thinking" }]);
-
-    const controller = new AbortController();
-    abort.current = controller;
+    write((current) => [...current, { id: thinkingId, role: "thinking" }]);
 
     const agentId = nextId.current++;
     let markdown = "";
     let hasStarted = false;
 
     const reveal = createReveal((count) => {
-      setTurns((current) =>
+      write((current) =>
         current.map((turn) =>
           turn.id === agentId && turn.role === "agent"
             ? { ...turn, html: renderMarkdown(markdown.slice(0, count)) }
@@ -100,19 +95,20 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
       );
     });
 
-    revealRef.current = reveal;
+    const controller = new AbortController();
+    running.current.set(owner, { controller, reveal });
 
     try {
       await streamChat({
         text,
-        threadId,
+        threadId: owner,
         signal: controller.signal,
         onToken: (token) => {
           markdown += token;
 
           if (!hasStarted) {
             hasStarted = true;
-            setTurns((current) => [
+            write((current) => [
               ...current.filter((turn) => turn.id !== thinkingId),
               { id: agentId, role: "agent", html: "", isStreaming: true },
             ]);
@@ -124,7 +120,7 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
 
       await reveal.settle(markdown.length);
 
-      setTurns((current) =>
+      write((current) =>
         current
           .filter((turn) => turn.id !== thinkingId)
           .map((turn) =>
@@ -134,29 +130,47 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
     } catch (cause) {
       reveal.kill();
 
-      if (controller.signal.aborted) {
-        return;
+      if (!controller.signal.aborted) {
+        console.error("chat failed", cause);
+        write((current) => [
+          ...current.filter((turn) => turn.id !== thinkingId && turn.id !== agentId),
+          {
+            id: nextId.current++,
+            role: "agent",
+            html: "<p>I could not answer just now. Try again in a moment.</p>",
+            isStreaming: false,
+          },
+        ]);
       }
-
-      console.error("chat failed", cause);
-      setTurns((current) => [
-        ...current.filter((turn) => turn.id !== thinkingId && turn.id !== agentId),
-        {
-          id: nextId.current++,
-          role: "agent",
-          html: "<p>I could not answer just now. Try again in a moment.</p>",
-          isStreaming: false,
-        },
-      ]);
     } finally {
-      setIsBusy(false);
+      running.current.delete(owner);
+      setBusyThreads((current) => current.filter((id) => id !== owner));
       onSettled?.();
+
+      if (!isShowing() && owner === threadIdRef.current) {
+        loadTurns(owner)
+          .then((stored) => {
+            if (owner === threadIdRef.current) {
+              setTurns(stored);
+            }
+          })
+          .catch((cause: unknown) => {
+            console.error("could not load this chat", cause);
+          });
+      }
     }
   };
 
   const stop = () => {
-    abort.current?.abort();
-    revealRef.current?.kill();
+    if (threadId === null) {
+      return;
+    }
+
+    const active = running.current.get(threadId);
+    active?.controller.abort();
+    active?.reveal.kill();
+    running.current.delete(threadId);
+
     setTurns((current) =>
       current
         .filter((turn) => turn.role !== "thinking")
@@ -164,10 +178,14 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
           turn.role === "agent" && turn.isStreaming ? { ...turn, isStreaming: false } : turn,
         ),
     );
-    setIsBusy(false);
+    setBusyThreads((current) => current.filter((id) => id !== threadId));
   };
 
   const submit = () => {
+    if (threadId === null) {
+      return;
+    }
+
     if (isBusy) {
       stop();
       return;
@@ -189,7 +207,7 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
     setValue("");
     setAttachment(null);
     setEditing(null);
-    void respond(asked);
+    void respond(threadId, asked);
   };
 
   return {

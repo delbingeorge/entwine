@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-import { ChatRoundIcon } from "@solar-icons/react/linear/chat-round";
 import { PenNewSquareIcon } from "@solar-icons/react/linear/pen-new-square";
 
 import { LucideIcon } from "@/shared/components/lucide-icon";
@@ -9,7 +8,7 @@ import type { ThreadSummary } from "@/shared/lib/thread-api";
 import { useDialogTransition } from "../hooks/use-dialog-transition";
 
 import { HistoryGroup } from "./history-group";
-import { JobStatusChip } from "./job-status-chip";
+import { HistoryJobs } from "./history-jobs";
 
 import type { Job, JobStatus } from "../types";
 
@@ -146,7 +145,11 @@ export const HistoryDialog = ({
           </kbd>
         </label>
 
-        <div className="overflow-y-auto py-1" id="history-options" role="listbox">
+        <div
+          className="max-h-[min(58vh,22rem)] min-h-40 overflow-y-auto py-1"
+          id="history-options"
+          role="listbox"
+        >
           <HistoryGroup
             activeIndex={safeIndex}
             currentId={currentId}
@@ -174,35 +177,7 @@ export const HistoryDialog = ({
             />
           )}
 
-          {jobs.length === 0 ? null : (
-            <div>
-              <p className="px-4 pt-2.5 pb-1 text-[10px] tracking-widest text-composer-placeholder">
-                JOBS
-              </p>
-              {jobs.map(({ job, status }) => (
-                <div className="group flex w-full items-center pr-2" key={job.id}>
-                  <button
-                    className="flex min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left"
-                    onClick={() => {
-                      onOpenJob(job.id);
-                    }}
-                    type="button"
-                  >
-                    <ChatRoundIcon className="size-4 shrink-0 text-composer-soft" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13.5px] text-composer-ink">
-                        {job.title} · {job.company}
-                      </span>
-                      <span className="block truncate font-mono text-[11px] text-composer-placeholder">
-                        {job.salary} · {job.location}
-                      </span>
-                    </span>
-                    <JobStatusChip status={status} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <HistoryJobs jobs={jobs} onOpenJob={onOpenJob} />
 
           <div>
             <p className="px-4 pt-2.5 pb-1 text-[10px] tracking-widest text-composer-placeholder">
