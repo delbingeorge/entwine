@@ -88,7 +88,7 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 
 			message := "Ellie could not answer just now."
 			if errors.Is(err, chat.ErrQuota) {
-				message = "Ellie has used up today's model quota. Try again tomorrow."
+        message = "Ellie is off shift. Check back later."
 			}
 
 			writeStreamError(w, flusher, message)
