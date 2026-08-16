@@ -58,11 +58,4 @@ export const scenariosByTab: Record<CoachingTab, Scenario[]> = {
       subtitle: "You finally got the interview. Now what?",
     },
   ],
-  "Your own": [
-    {
-      id: "custom",
-      title: "Create your own",
-      subtitle: "Set up a custom session with your goal and your script.",
-    },
-  ],
 };

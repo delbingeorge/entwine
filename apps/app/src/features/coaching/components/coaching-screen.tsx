@@ -75,7 +75,6 @@ export const CoachingScreen = () => {
               {scenariosByTab[tab].map((scenario) => (
                 <ScenarioCard
                   isBusy={isBusy}
-                  isDashed={scenario.id === "custom"}
                   key={scenario.id}
                   onBegin={() => {
                     begin(scenario);

@@ -4,18 +4,13 @@ import type { Scenario } from "../scenarios";
 
 interface ScenarioCardProps {
   isBusy: boolean;
-  isDashed?: boolean;
   onBegin: () => void;
   scenario: Scenario;
 }
 
-export const ScenarioCard = ({ isBusy, isDashed, onBegin, scenario }: ScenarioCardProps) => (
+export const ScenarioCard = ({ isBusy, onBegin, scenario }: ScenarioCardProps) => (
   <button
-    className={`group flex min-h-[132px] flex-col items-start gap-2 rounded-xl border px-4 py-4 text-left transition-colors disabled:opacity-60 ${
-      isDashed === true
-        ? "border-dashed border-composer-line bg-transparent hover:bg-composer-track"
-        : "border-composer-line bg-composer-surface hover:bg-composer-track"
-    }`}
+    className="group flex min-h-[132px] flex-col items-start gap-2 rounded-xl border border-composer-line bg-composer-surface px-4 py-4 text-left transition-colors hover:bg-composer-track disabled:opacity-60"
     disabled={isBusy}
     onClick={onBegin}
     type="button"
