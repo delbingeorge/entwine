@@ -1,6 +1,9 @@
 package http
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 func withCORS(allowedOrigin string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -22,4 +25,10 @@ func withCORS(allowedOrigin string) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func originHost(origin string) string {
+	trimmed := strings.TrimPrefix(strings.TrimPrefix(origin, "https://"), "http://")
+
+	return trimmed
 }

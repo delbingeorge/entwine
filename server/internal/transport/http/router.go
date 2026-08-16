@@ -20,6 +20,7 @@ func NewRouter(
 	profiles ProfileService,
 	details ProfileDetailService,
 	chats ChatService,
+	voices VoiceService,
 	allowedOrigin string,
 ) http.Handler {
 	mux := http.NewServeMux()
@@ -36,6 +37,7 @@ func NewRouter(
 	mux.Handle("POST /v1/threads", authenticated(handleCreateThread(logger, chats)))
 	mux.Handle("GET /v1/threads/{id}/messages", authenticated(handleThreadMessages(logger, chats)))
 	mux.Handle("DELETE /v1/threads/{id}", authenticated(handleDeleteThread(logger, chats)))
+	mux.HandleFunc("GET /v1/voice", handleVoice(logger, verifier, users, voices, allowedOrigin))
 
 	return withCORS(allowedOrigin)(mux)
 }

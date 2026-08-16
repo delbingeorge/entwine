@@ -17,6 +17,7 @@ type Config struct {
 	AppOrigin           string
 	GeminiAPIKey        string
 	GeminiModel         string
+	GeminiLiveModel     string
 	ShutdownTimeout     time.Duration
 }
 
@@ -24,6 +25,7 @@ const (
 	defaultPort            = 8080
 	defaultShutdownTimeout = 10 * time.Second
 	defaultGeminiModel     = "gemini-3.5-flash"
+	defaultGeminiLive      = "gemini-3.1-flash-live-preview"
 	maxPort                = 65535
 )
 
@@ -74,6 +76,11 @@ func Load() (Config, error) {
 		geminiModel = defaultGeminiModel
 	}
 
+	geminiLive := os.Getenv("GEMINI_LIVE_MODEL")
+	if geminiLive == "" {
+		geminiLive = defaultGeminiLive
+	}
+
 	return Config{
 		Port:                port,
 		DatabaseURL:         databaseURL,
@@ -83,6 +90,7 @@ func Load() (Config, error) {
 		AppOrigin:           appOrigin,
 		GeminiAPIKey:        geminiKey,
 		GeminiModel:         geminiModel,
+		GeminiLiveModel:     geminiLive,
 		ShutdownTimeout:     defaultShutdownTimeout,
 	}, nil
 }

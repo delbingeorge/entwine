@@ -21,6 +21,7 @@ import (
 	"github.com/octane/entwine/server/internal/usecase/chat"
 	"github.com/octane/entwine/server/internal/usecase/identity"
 	"github.com/octane/entwine/server/internal/usecase/profile"
+	"github.com/octane/entwine/server/internal/usecase/voice"
 )
 
 func main() {
@@ -63,13 +64,19 @@ func run(logger *slog.Logger) error {
 	parser := llm.NewGeminiParser(llm.GeminiConfig{APIKey: cfg.GeminiAPIKey, Model: cfg.GeminiModel})
 	detailRepo := postgres.NewProfileDetailRepo(db)
 	details := profile.NewDetailService(profileRepo, detailRepo, parser, time.Now)
+	threadRepo := postgres.NewThreadRepo(db)
 	chats := chat.NewService(
 		llm.NewGeminiResponder(llm.GeminiConfig{APIKey: cfg.GeminiAPIKey, Model: cfg.GeminiModel}),
-		postgres.NewThreadRepo(db), profileRepo, detailRepo, time.Now)
+		threadRepo, profileRepo, detailRepo, time.Now)
+
+	voices := voice.NewService(
+		llm.NewGeminiLive(llm.LiveConfig{APIKey: cfg.GeminiAPIKey, Model: cfg.GeminiLiveModel}),
+		threadRepo)
 
 	server := &http.Server{
-		Addr:              net.JoinHostPort("", strconv.Itoa(cfg.Port)),
-		Handler:           transporthttp.NewRouter(logger, verifier, users, profiles, details, chats, cfg.AppOrigin),
+		Addr: net.JoinHostPort("", strconv.Itoa(cfg.Port)),
+		Handler: transporthttp.NewRouter(
+			logger, verifier, users, profiles, details, chats, voices, cfg.AppOrigin),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
