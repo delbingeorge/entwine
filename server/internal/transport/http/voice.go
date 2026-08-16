@@ -56,6 +56,7 @@ func handleVoice(
 		caller, threadID, err := authenticateVoice(ctx, conn, verifier, users)
 		if err != nil {
 			logger.WarnContext(ctx, "voice auth failed", slog.Any("error", err))
+			notify(ctx, conn, voiceNotice{Text: "Could not verify your session.", Type: "error"})
 			_ = conn.Close(websocket.StatusPolicyViolation, "unauthorized")
 
 			return
@@ -63,11 +64,15 @@ func handleVoice(
 
 		session, err := voices.Start(ctx, caller.ID, threadID)
 		if err != nil {
-			logger.ErrorContext(ctx, "voice session failed", slog.Any("error", err))
+			logger.ErrorContext(ctx, "voice session failed",
+				slog.String("thread", threadID), slog.Any("error", err))
+			notify(ctx, conn, voiceNotice{Text: "Could not reach the voice model.", Type: "error"})
 			_ = conn.Close(websocket.StatusInternalError, "could not start")
 
 			return
 		}
+
+		logger.InfoContext(ctx, "voice session open", slog.String("thread", threadID))
 
 		defer func() { _ = session.Close() }()
 

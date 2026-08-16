@@ -60,7 +60,7 @@ type liveSetup struct {
 
 type liveRealtimeInput struct {
 	RealtimeInput struct {
-		MediaChunks []liveBlob `json:"mediaChunks"`
+		Audio *liveBlob `json:"audio,omitempty"`
 	} `json:"realtimeInput"`
 }
 
@@ -125,10 +125,10 @@ func (s *liveSession) Events() <-chan voice.Event {
 
 func (s *liveSession) Send(ctx context.Context, pcm []byte) error {
 	var input liveRealtimeInput
-	input.RealtimeInput.MediaChunks = []liveBlob{{
+	input.RealtimeInput.Audio = &liveBlob{
 		Data:     base64.StdEncoding.EncodeToString(pcm),
 		MimeType: inputMimeType,
-	}}
+	}
 
 	if err := s.write(ctx, input); err != nil {
 		return fmt.Errorf("send audio: %w", err)

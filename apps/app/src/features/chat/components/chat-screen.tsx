@@ -1,20 +1,17 @@
-import { useCallback, useRef, useState } from "react";
+import { useState } from "react";
 
 import { useSearch } from "@tanstack/react-router";
 
 import { useMountTransition } from "@/shared/hooks/use-mount-transition";
-import { isVoiceSupported, useVoiceCall } from "@/shared/hooks/use-voice-call";
 import { importResume } from "@/shared/lib/profile-detail-api";
 
-import { CallWidget, VoiceCallScreen } from "@/features/voice";
+import { CallWidget, useLiveCall, VoiceCallScreen } from "@/features/voice";
 
 import { agentName } from "../data";
 import { useChat } from "../hooks/use-chat";
 import { useJobThreads } from "../hooks/use-job-threads";
 import { useThreads } from "../hooks/use-threads";
 import { classifyFile, humanSize } from "../lib/classify-file";
-import { htmlToText } from "../lib/html-to-text";
-import { renderMarkdown } from "../lib/render-markdown";
 
 import { ChatHeader } from "./chat-header";
 import { Composer } from "./composer";
@@ -26,74 +23,28 @@ import "../styles/md-body.css";
 export const ChatScreen = () => {
   const { thread } = useSearch({ from: "/" });
   const history = useThreads(thread);
-  const isOnCall = useRef(false);
-  const [callState, setCallState] = useState({
-    caption: "",
-    isMuted: false,
-    isOpen: false,
-    isSilent: false,
-    startedAt: 0,
-  });
+  const [callState, setCallState] = useState({ caption: "", isOpen: false, startedAt: 0 });
 
   const chat = useChat({
-    onReply: (text) => {
-      if (!isOnCall.current) {
-        return;
-      }
-
-      const spoken = htmlToText(renderMarkdown(text));
-      setCallState((current) => ({ ...current, caption: spoken }));
-
-      if (callState.isSilent) {
-        call.listen();
-        return;
-      }
-
-      call.speak(spoken, call.listen);
-    },
     onSettled: history.syncTitles,
     threadId: history.currentId,
   });
 
-  const call = useVoiceCall({
-    onHeard: useCallback(
-      (text: string) => {
-        chat.setValue("");
-        chat.say(text);
-      },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [chat.say],
-    ),
-    onInterim: chat.setValue,
+  const call = useLiveCall({
+    onFailure: (message) => {
+      setCallState((state) => ({ ...state, caption: message }));
+    },
+    onTranscript: (text) => {
+      setCallState((state) => ({ ...state, caption: text }));
+    },
   });
 
   const current = history.threads.find((entry) => entry.id === history.currentId);
-  const canCall = current?.kind === "coaching" && isVoiceSupported();
+  const canCall = current?.kind === "coaching";
 
   const endCall = () => {
-    isOnCall.current = false;
     call.stop();
-    chat.setValue("");
-    setCallState({ caption: "", isMuted: false, isOpen: false, isSilent: false, startedAt: 0 });
-  };
-
-  const toggleMute = () => {
-    setCallState((state) => {
-      const isMuted = !state.isMuted;
-
-      if (isMuted) {
-        call.stop();
-      } else {
-        call.listen();
-      }
-
-      return { ...state, isMuted };
-    });
-  };
-
-  const toggleSpeaker = () => {
-    window.speechSynthesis.cancel();
-    setCallState((state) => ({ ...state, isSilent: !state.isSilent }));
+    setCallState({ caption: "", isOpen: false, startedAt: 0 });
   };
 
   const callScreen = useMountTransition(callState.isOpen, {
@@ -106,14 +57,17 @@ export const ChatScreen = () => {
   });
 
   const toggleCall = () => {
-    if (call.isCalling || isOnCall.current) {
+    if (callState.startedAt !== 0) {
       endCall();
       return;
     }
 
-    isOnCall.current = true;
-    setCallState((state) => ({ ...state, isOpen: true, startedAt: Date.now() }));
-    call.listen();
+    if (history.currentId === null) {
+      return;
+    }
+
+    setCallState({ caption: "", isOpen: true, startedAt: Date.now() });
+    void call.start(history.currentId);
   };
   const threads = useJobThreads();
 
@@ -123,8 +77,8 @@ export const ChatScreen = () => {
         <VoiceCallScreen
           agentName={agentName}
           caption={callState.caption}
-          isMuted={callState.isMuted}
-          isSilent={callState.isSilent}
+          isMuted={call.isMuted}
+          isSilent={false}
           onEnd={endCall}
           onMinimise={() => {
             setCallState((state) => ({ ...state, isOpen: false }));
@@ -132,11 +86,11 @@ export const ChatScreen = () => {
           onShowTranscript={() => {
             setCallState((state) => ({ ...state, isOpen: false }));
           }}
-          onToggleMute={toggleMute}
-          onToggleSpeaker={toggleSpeaker}
+          onToggleMute={call.toggleMute}
+          onToggleSpeaker={call.toggleMute}
           rootRef={callScreen.ref}
           startedAt={callState.startedAt}
-          status={chat.isBusy ? "Connecting" : call.isCalling ? "Listening" : "Speaking"}
+          status={call.status}
           topic={current?.title ?? ""}
         />
       ) : null}
@@ -144,17 +98,17 @@ export const ChatScreen = () => {
       {callWidget.isMounted ? (
         <CallWidget
           agentName={agentName}
-          isMuted={callState.isMuted}
-          isSilent={callState.isSilent}
+          isMuted={call.isMuted}
+          isSilent={false}
           onEnd={endCall}
           onOpen={() => {
             setCallState((state) => ({ ...state, isOpen: true }));
           }}
-          onToggleMute={toggleMute}
-          onToggleSpeaker={toggleSpeaker}
+          onToggleMute={call.toggleMute}
+          onToggleSpeaker={call.toggleMute}
           rootRef={callWidget.ref}
           startedAt={callState.startedAt}
-          status={chat.isBusy ? "Connecting" : call.isCalling ? "Listening" : "Speaking"}
+          status={call.status}
         />
       ) : null}
       <ChatHeader
@@ -181,7 +135,7 @@ export const ChatScreen = () => {
             attachment={chat.attachment}
             canCall={canCall}
             isBusy={chat.isBusy}
-            isCalling={call.isCalling || isOnCall.current}
+            isCalling={callState.startedAt !== 0}
             isEditing={chat.isEditing}
             onCancelEdit={() => {
               chat.setValue("");
