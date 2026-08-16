@@ -16,7 +16,7 @@ export const ThreadIntro = ({ eyebrow, title }: ThreadIntroProps) => {
       <div className="flex flex-col items-start text-left font-ui" ref={riseRef}>
         <p className="text-[17px] text-composer-soft">{eyebrow}</p>
         <h1 className="text-[30px] leading-[1.15] font-medium tracking-tight text-composer-ink">
-          {title}.
+          {title}
         </h1>
       </div>
     </div>
