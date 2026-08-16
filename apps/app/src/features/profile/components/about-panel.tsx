@@ -39,7 +39,7 @@ const Bullets = ({ items }: { items: string[] }) => (
 export const AboutPanel = () => (
   <div className="flex flex-col gap-7">
     <section>
-      <img alt="Entwine" className="h-8 w-auto" src={entwineLogo} />
+      <img alt="Entwine" className="h-8 w-auto dark:invert" src={entwineLogo} />
       <p className="pt-4 text-[13px] leading-relaxed text-composer-soft">
         Entwine is a job search you talk to. Ellie reads your resume, learns what you are actually
         looking for, and finds engineering roles across India and South-East Asia with the salary

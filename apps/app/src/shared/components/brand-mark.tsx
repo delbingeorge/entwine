@@ -5,7 +5,7 @@ import entwineLogo from "@/assets/entwine-logo.svg";
 const LottiePlayer = lazy(() => import("lottie-react"));
 
 const StaticMark = () => (
-  <img alt="" className="h-9 w-auto hover:cursor-pointer" src={entwineLogo} />
+  <img alt="" className="h-9 w-auto hover:cursor-pointer dark:invert" src={entwineLogo} />
 );
 
 export const BrandMark = () => {
@@ -36,7 +36,7 @@ export const BrandMark = () => {
         <Suspense fallback={<StaticMark />}>
           <LottiePlayer
             animationData={animation}
-            className="h-9 w-auto hover:cursor-pointer"
+            className="h-9 w-auto hover:cursor-pointer dark:invert"
             loop={false}
             onComplete={() => {
               setIsPlaying(false);

@@ -7,12 +7,13 @@ import { prefersReducedMotion } from "@/shared/lib/reduced-motion";
 
 interface VoiceOrbProps {
   getLevel: () => number;
+  isMuted?: boolean;
 }
 
 const innerSpread = 0.34;
 const outerSpread = 0.62;
 
-export const VoiceOrb = ({ getLevel }: VoiceOrbProps) => {
+export const VoiceOrb = ({ getLevel, isMuted = false }: VoiceOrbProps) => {
   const outerRef = useRef<HTMLSpanElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
   const coreRef = useRef<HTMLDivElement>(null);
@@ -35,7 +36,7 @@ export const VoiceOrb = ({ getLevel }: VoiceOrbProps) => {
     let frame = 0;
 
     const follow = () => {
-      const level = getLevel();
+      const level = isMuted ? 0 : getLevel();
 
       scaleOuter(1 + level * outerSpread);
       fadeOuter(0.06 + level * 0.3);
@@ -52,7 +53,7 @@ export const VoiceOrb = ({ getLevel }: VoiceOrbProps) => {
       cancelAnimationFrame(frame);
       gsap.set([outer, inner, core], { clearProps: "all" });
     };
-  }, [getLevel]);
+  }, [getLevel, isMuted]);
 
   return (
     <div className="relative flex size-[248px] items-center justify-center">

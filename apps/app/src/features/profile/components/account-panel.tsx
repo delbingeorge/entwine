@@ -2,6 +2,7 @@ import { LinkedInIcon } from "@/shared/components/linkedin-icon";
 import { LucideIcon } from "@/shared/components/lucide-icon";
 import type { Profile } from "@/shared/lib/profile-api";
 
+import { AppearanceSection } from "./appearance-section";
 import { PreferencesSection } from "./preferences-section";
 
 interface AccountPanelProps {
@@ -34,6 +35,8 @@ export const AccountPanel = ({ email, name, onSignOut, profile }: AccountPanelPr
     </section>
 
     <PreferencesSection profile={profile} />
+
+    <AppearanceSection />
 
     <section className="border-t border-composer-line pt-7">
       <h2 className="pb-4 text-[11px] tracking-widest text-composer-placeholder">
