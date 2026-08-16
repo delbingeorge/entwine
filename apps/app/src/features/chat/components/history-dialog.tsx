@@ -14,6 +14,7 @@ import { JobStatusChip } from "./job-status-chip";
 import type { Job, JobStatus } from "../types";
 
 interface HistoryDialogProps {
+  canStartNew: boolean;
   currentId: string;
   isOpen: boolean;
   jobs: { job: Job; status: JobStatus }[];
@@ -28,6 +29,7 @@ interface HistoryDialogProps {
 const rowId = (index: number) => `history-option-${String(index)}`;
 
 export const HistoryDialog = ({
+  canStartNew,
   currentId,
   isOpen,
   jobs,
@@ -77,7 +79,10 @@ export const HistoryDialog = ({
     const thread = ordered[index];
 
     if (thread === undefined) {
-      onNew();
+      if (canStartNew) {
+        onNew();
+      }
+
       return;
     }
 
@@ -213,7 +218,8 @@ export const HistoryDialog = ({
               role="option"
             >
               <button
-                className="flex min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left"
+                className="flex min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left disabled:opacity-40"
+                disabled={!canStartNew}
                 onClick={onNew}
                 tabIndex={-1}
                 type="button"
@@ -224,7 +230,7 @@ export const HistoryDialog = ({
                     Start a new chat…
                   </span>
                   <span className="block truncate font-mono text-[11px] text-composer-placeholder">
-                    Ask Ellie something else
+                    {canStartNew ? "Ask Ellie something else" : "Wait for the current reply"}
                   </span>
                 </span>
                 {isNewActive ? (

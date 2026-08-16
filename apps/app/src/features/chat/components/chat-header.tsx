@@ -20,6 +20,7 @@ import { JumpMenu } from "./jump-menu";
 import type { JobStatus } from "../types";
 
 interface ChatHeaderProps {
+  canStartNew: boolean;
   currentThreadId: string | null;
   onDeleteThread: (id: string) => void;
   onLeaveSession: () => void;
@@ -32,6 +33,7 @@ interface ChatHeaderProps {
 }
 
 export const ChatHeader = ({
+  canStartNew,
   currentThreadId,
   onDeleteThread,
   onLeaveSession,
@@ -152,6 +154,7 @@ export const ChatHeader = ({
         </div>
       </header>
       <HistoryDialog
+        canStartNew={canStartNew}
         currentId={currentThreadId ?? ""}
         isOpen={isHistoryOpen}
         onClose={() => {

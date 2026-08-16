@@ -115,9 +115,11 @@ export const ChatScreen = () => {
     chat.submit();
   };
 
+  // Blank threads are reused, and a streaming reply would be abandoned.
+  const canStartNew = !isEmpty && !chat.isBusy;
+
   const startNewThread = () => {
-    // Already sitting on a blank thread, so reuse it rather than making another.
-    if (isEmpty) {
+    if (!canStartNew) {
       return;
     }
 
@@ -173,6 +175,7 @@ export const ChatScreen = () => {
       ) : null}
       <ChatHeader
         currentThreadId={history.currentId}
+        canStartNew={canStartNew}
         onDeleteThread={history.remove}
         onLeaveSession={history.leaveSession}
         onNewThread={startNewThread}

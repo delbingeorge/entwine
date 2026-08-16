@@ -5,7 +5,7 @@ interface IntroCopy {
 
 export const introCopy = (isCoaching: boolean, name: string, topic: string): IntroCopy => {
   if (isCoaching) {
-    return { eyebrow: "Practice session", title: topic === "" ? "Let's practise" : topic };
+    return { eyebrow: "Practice how to", title: topic === "" ? "Let's practise" : topic };
   }
 
   return {
