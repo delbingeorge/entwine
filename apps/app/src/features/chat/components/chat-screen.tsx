@@ -78,16 +78,13 @@ export const ChatScreen = () => {
           agentName={agentName}
           caption={callState.caption}
           isMuted={call.isMuted}
-          isSilent={false}
+          isSilent={call.isSilent}
           onEnd={endCall}
           onMinimise={() => {
             setCallState((state) => ({ ...state, isOpen: false }));
           }}
-          onShowTranscript={() => {
-            setCallState((state) => ({ ...state, isOpen: false }));
-          }}
           onToggleMute={call.toggleMute}
-          onToggleSpeaker={call.toggleMute}
+          onToggleSpeaker={call.toggleSpeaker}
           rootRef={callScreen.ref}
           startedAt={callState.startedAt}
           status={call.status}
@@ -99,13 +96,13 @@ export const ChatScreen = () => {
         <CallWidget
           agentName={agentName}
           isMuted={call.isMuted}
-          isSilent={false}
+          isSilent={call.isSilent}
           onEnd={endCall}
           onOpen={() => {
             setCallState((state) => ({ ...state, isOpen: true }));
           }}
           onToggleMute={call.toggleMute}
-          onToggleSpeaker={call.toggleMute}
+          onToggleSpeaker={call.toggleSpeaker}
           rootRef={callWidget.ref}
           startedAt={callState.startedAt}
           status={call.status}

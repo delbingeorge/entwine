@@ -1,10 +1,9 @@
 import type { RefObject } from "react";
 
-import { ChatRoundIcon } from "@solar-icons/react/linear/chat-round";
-import { KeyboardIcon } from "@solar-icons/react/linear/keyboard";
-import { MenuDotsIcon } from "@solar-icons/react/linear/menu-dots";
+import { EndCallIcon } from "@solar-icons/react/linear/end-call";
 import { MicrophoneIcon } from "@solar-icons/react/linear/microphone";
 import { UserIcon } from "@solar-icons/react/linear/user";
+import { VolumeCrossIcon } from "@solar-icons/react/linear/volume-cross";
 import { VolumeLoudIcon } from "@solar-icons/react/linear/volume-loud";
 
 import { LucideIcon } from "@/shared/components/lucide-icon";
@@ -14,7 +13,7 @@ import { formatElapsed } from "../lib/elapsed";
 
 import { Control, ControlBar } from "./call-controls";
 
-export type CallStatus = "Connecting" | "Listening" | "Speaking";
+import type { LiveStatus } from "../hooks/use-live-call";
 
 interface VoiceCallScreenProps {
   agentName: string;
@@ -23,12 +22,11 @@ interface VoiceCallScreenProps {
   isSilent: boolean;
   onEnd: () => void;
   onMinimise: () => void;
-  onShowTranscript: () => void;
   onToggleMute: () => void;
   onToggleSpeaker: () => void;
   rootRef: RefObject<HTMLDivElement | null>;
   startedAt: number;
-  status: CallStatus;
+  status: LiveStatus;
   topic: string;
 }
 
@@ -39,7 +37,6 @@ export const VoiceCallScreen = ({
   isSilent,
   onEnd,
   onMinimise,
-  onShowTranscript,
   onToggleMute,
   onToggleSpeaker,
   rootRef,
@@ -89,14 +86,6 @@ export const VoiceCallScreen = ({
         )}
 
         <ControlBar>
-          <button
-            aria-label="More options"
-            className="flex size-8 items-center justify-center text-composer-placeholder hover:text-composer-ink"
-            type="button"
-          >
-            <MenuDotsIcon className="size-5" />
-          </button>
-
           <Control isOn={!isMuted} label={isMuted ? "Unmute" : "Mute"} onClick={onToggleMute}>
             <MicrophoneIcon className="size-5" />
           </Control>
@@ -106,19 +95,15 @@ export const VoiceCallScreen = ({
             label={isSilent ? "Turn sound on" : "Turn sound off"}
             onClick={onToggleSpeaker}
           >
-            <VolumeLoudIcon className="size-5" />
-          </Control>
-
-          <Control label="Type instead" onClick={onShowTranscript}>
-            <KeyboardIcon className="size-5" />
-          </Control>
-
-          <Control label="Show the transcript" onClick={onShowTranscript} tone="secondary">
-            <ChatRoundIcon className="size-5" />
+            {isSilent ? (
+              <VolumeCrossIcon className="size-5" />
+            ) : (
+              <VolumeLoudIcon className="size-5" />
+            )}
           </Control>
 
           <Control label="End the call" onClick={onEnd} tone="end">
-            <LucideIcon className="size-5" name="x" strokeWidth={2.5} />
+            <EndCallIcon className="size-5" />
           </Control>
         </ControlBar>
       </div>

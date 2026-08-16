@@ -36,7 +36,7 @@ export const Control = ({
 );
 
 export const ControlBar = ({ children }: { children: ReactNode }) => (
-  <div className="flex items-center gap-3 rounded-full border border-composer-line bg-composer-surface px-4 py-3 shadow-[0_8px_28px_rgba(0,0,0,0.08)]">
+  <div className="flex items-center gap-3 rounded-3xl border border-composer-line bg-composer-surface px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.05)]">
     {children}
   </div>
 );

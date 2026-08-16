@@ -6,7 +6,7 @@ import { getSession } from "@/shared/lib/session";
 import { AudioPlayback } from "../lib/audio-playback";
 import { captureWorkletUrl } from "../lib/capture-worklet";
 
-export type LiveStatus = "Connecting" | "Listening" | "Speaking";
+export type LiveStatus = "Connecting" | "Listening" | "Muted" | "Speaking";
 
 interface LiveCallOptions {
   onFailure: (message: string) => void;
@@ -18,6 +18,7 @@ const captureRate = 16000;
 export const useLiveCall = ({ onFailure, onTranscript }: LiveCallOptions) => {
   const [status, setStatus] = useState<LiveStatus>("Connecting");
   const [isMuted, setIsMuted] = useState(false);
+  const [isSilent, setIsSilent] = useState(false);
   const [isLive, setIsLive] = useState(false);
 
   const socket = useRef<WebSocket | null>(null);
@@ -25,6 +26,7 @@ export const useLiveCall = ({ onFailure, onTranscript }: LiveCallOptions) => {
   const stream = useRef<MediaStream | null>(null);
   const playback = useRef(new AudioPlayback());
   const muted = useRef(false);
+  const silent = useRef(false);
   const live = useRef(false);
   const report = useRef(onFailure);
   const transcript = useRef(onTranscript);
@@ -48,7 +50,11 @@ export const useLiveCall = ({ onFailure, onTranscript }: LiveCallOptions) => {
     playback.current = new AudioPlayback();
 
     live.current = false;
+    muted.current = false;
+    silent.current = false;
     setIsLive(false);
+    setIsMuted(false);
+    setIsSilent(false);
     setStatus("Connecting");
   }, []);
 
@@ -160,12 +166,23 @@ export const useLiveCall = ({ onFailure, onTranscript }: LiveCallOptions) => {
   return {
     isLive,
     isMuted,
+    isSilent,
     start,
-    status,
+    status: isMuted ? ("Muted" as LiveStatus) : status,
     stop,
     toggleMute: () => {
       muted.current = !muted.current;
       setIsMuted(muted.current);
+    },
+    toggleSpeaker: () => {
+      silent.current = !silent.current;
+      playback.current.setMuted(silent.current);
+
+      if (silent.current) {
+        playback.current.flush();
+      }
+
+      setIsSilent(silent.current);
     },
   };
 };

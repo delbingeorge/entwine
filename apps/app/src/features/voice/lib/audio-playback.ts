@@ -3,16 +3,25 @@ const outputRate = 24000;
 export class AudioPlayback {
   private context: AudioContext | null = null;
   private cursor = 0;
+  private gain: GainNode | null = null;
   private playing: AudioBufferSourceNode[] = [];
 
   async ready() {
     this.context ??= new AudioContext({ sampleRate: outputRate });
+    this.gain ??= this.context.createGain();
+    this.gain.connect(this.context.destination);
 
     if (this.context.state === "suspended") {
       await this.context.resume();
     }
 
     return this.context;
+  }
+
+  setMuted(isMuted: boolean) {
+    if (this.gain !== null) {
+      this.gain.gain.value = isMuted ? 0 : 1;
+    }
   }
 
   play(pcm: ArrayBuffer, onDrained: () => void) {
@@ -32,7 +41,7 @@ export class AudioPlayback {
 
     const node = context.createBufferSource();
     node.buffer = buffer;
-    node.connect(context.destination);
+    node.connect(this.gain ?? context.destination);
 
     this.cursor = Math.max(this.cursor, context.currentTime);
     node.start(this.cursor);
@@ -60,6 +69,8 @@ export class AudioPlayback {
 
   async close() {
     this.flush();
+    this.gain?.disconnect();
+    this.gain = null;
     await this.context?.close();
     this.context = null;
   }
