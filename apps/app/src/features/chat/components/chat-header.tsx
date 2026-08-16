@@ -6,8 +6,9 @@ import { UserCircleIcon } from "@solar-icons/react/linear/user-circle";
 import { useNavigate } from "@tanstack/react-router";
 
 import { BrandMark } from "@/shared/components/brand-mark";
-import { useLongPress } from "@/shared/hooks/use-long-press";
-import type { SettingsTab } from "@/shared/lib/settings-tabs";
+import { usePressMenu } from "@/shared/hooks/use-press-menu";
+import { coachingTabs, type CoachingTab } from "@/shared/lib/coaching-tabs";
+import { settingsTabs, type SettingsTab } from "@/shared/lib/settings-tabs";
 import type { ThreadSummary } from "@/shared/lib/thread-api";
 
 import { jobById } from "../jobs";
@@ -40,15 +41,20 @@ export const ChatHeader = ({
 }: ChatHeaderProps) => {
   const navigate = useNavigate();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [isJumpOpen, setIsJumpOpen] = useState(false);
-
   const openSettings = (tab: SettingsTab) => {
-    setIsJumpOpen(false);
     void navigate({ search: { tab }, to: "/settings" });
   };
 
-  const longPress = useLongPress(() => {
-    setIsJumpOpen(true);
+  const openCoaching = (tab: CoachingTab) => {
+    void navigate({ search: { tab }, to: "/coaching" });
+  };
+
+  const settingsMenu = usePressMenu((index) => {
+    openSettings(settingsTabs[index] ?? "Account");
+  });
+
+  const coachingMenu = usePressMenu((index) => {
+    openCoaching(coachingTabs[index] ?? "Negotiation");
   });
 
   return (
@@ -67,23 +73,41 @@ export const ChatHeader = ({
           >
             <HistoryIcon className="size-4" />
           </button>
-          <button
-            aria-label="Coaching"
-            className="flex size-6 items-center justify-center rounded-full text-composer-soft transition-colors hover:text-composer-ink"
-            onClick={() => {
-              void navigate({ search: { tab: "Negotiation" }, to: "/coaching" });
-            }}
-            title="Coaching"
-            type="button"
-          >
-            <CompassIcon className="size-4" />
-          </button>
+          <div className="relative">
+            <button
+              aria-label="Coaching"
+              className="flex size-6 touch-none items-center justify-center rounded-full text-composer-soft transition-colors hover:text-composer-ink"
+              onClick={() => {
+                if (coachingMenu.didHold()) {
+                  return;
+                }
+
+                openCoaching("Negotiation");
+              }}
+              title="Coaching. Hold for sections."
+              type="button"
+              {...coachingMenu.triggerProps}
+            >
+              <CompassIcon className="size-4" />
+            </button>
+            {coachingMenu.isOpen ? (
+              <JumpMenu
+                activeIndex={coachingMenu.activeIndex}
+                onClose={coachingMenu.close}
+                onPick={(tab: CoachingTab) => {
+                  coachingMenu.close();
+                  openCoaching(tab);
+                }}
+                tabs={coachingTabs}
+              />
+            ) : null}
+          </div>
           <div className="relative">
             <button
               aria-label="Profile"
-              className="flex size-6 items-center justify-center rounded-full text-composer-soft transition-colors hover:text-composer-ink"
+              className="flex size-6 touch-none items-center justify-center rounded-full text-composer-soft transition-colors hover:text-composer-ink"
               onClick={() => {
-                if (longPress.didLongPress()) {
+                if (settingsMenu.didHold()) {
                   return;
                 }
 
@@ -91,16 +115,19 @@ export const ChatHeader = ({
               }}
               title="Profile. Hold for sections."
               type="button"
-              {...longPress.handlers}
+              {...settingsMenu.triggerProps}
             >
               <UserCircleIcon className="size-4" />
             </button>
-            {isJumpOpen ? (
+            {settingsMenu.isOpen ? (
               <JumpMenu
-                onClose={() => {
-                  setIsJumpOpen(false);
+                activeIndex={settingsMenu.activeIndex}
+                onClose={settingsMenu.close}
+                onPick={(tab: SettingsTab) => {
+                  settingsMenu.close();
+                  openSettings(tab);
                 }}
-                onPick={openSettings}
+                tabs={settingsTabs}
               />
             ) : null}
           </div>
