@@ -7,7 +7,7 @@ import { SignUpScreen } from "@/features/auth";
 import { ChatScreen } from "@/features/chat";
 
 interface HomeSearch {
-  thread: string;
+  thread?: string;
 }
 
 export const Route = createFileRoute("/")({
@@ -25,9 +25,8 @@ export const Route = createFileRoute("/")({
     return { isSignedIn: true };
   },
   component: HomePage,
-  validateSearch: (search: Record<string, unknown>): HomeSearch => ({
-    thread: typeof search.thread === "string" ? search.thread : "",
-  }),
+  validateSearch: (search: Record<string, unknown>): HomeSearch =>
+    typeof search.thread === "string" && search.thread !== "" ? { thread: search.thread } : {},
 });
 
 function HomePage() {

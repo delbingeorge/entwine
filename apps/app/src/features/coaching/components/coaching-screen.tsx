@@ -40,7 +40,7 @@ export const CoachingScreen = () => {
             <button
               className="-ml-2 flex items-center gap-1 rounded-md px-2 py-1 text-[12.5px] text-composer-soft hover:bg-composer-track hover:text-composer-ink"
               onClick={() => {
-                void navigate({ search: { thread: "" }, to: "/" });
+                void navigate({ search: {}, to: "/" });
               }}
               type="button"
             >

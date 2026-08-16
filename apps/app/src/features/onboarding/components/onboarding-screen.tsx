@@ -47,7 +47,7 @@ export const OnboardingScreen = () => {
   };
 
   return (
-    <SplitLayout headerAside={<StepCounter step={step} />} wide>
+    <SplitLayout followsTheme={edit} headerAside={<StepCounter step={step} />} wide>
       <FadeSwap swapKey={step}>
         <ManualForm
           draft={draft}

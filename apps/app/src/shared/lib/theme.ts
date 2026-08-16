@@ -14,25 +14,37 @@ export const readTheme = (): ThemeChoice => {
     return "Dark";
   }
 
-  if (stored === "light") {
-    return "Light";
+  if (stored === "system") {
+    return "System";
   }
 
-  return "System";
+  return "Light";
+};
+
+let isLightLocked = false;
+
+const paint = (choice: ThemeChoice) => {
+  document.documentElement.dataset.theme = isLightLocked
+    ? "light"
+    : choice === "System"
+      ? systemTheme()
+      : choice.toLowerCase();
 };
 
 export const applyTheme = (choice: ThemeChoice) => {
-  const resolved = choice === "System" ? systemTheme() : choice.toLowerCase();
+  localStorage.setItem(storageKey, choice.toLowerCase());
+  paint(choice);
+};
 
-  document.documentElement.dataset.theme = resolved;
+/** Signed-out screens ship a fixed light design, so they opt out of the theme. */
+export const lockLightTheme = () => {
+  isLightLocked = true;
+  document.documentElement.dataset.theme = "light";
+};
 
-  if (choice === "System") {
-    localStorage.removeItem(storageKey);
-
-    return;
-  }
-
-  localStorage.setItem(storageKey, resolved);
+export const unlockTheme = () => {
+  isLightLocked = false;
+  paint(readTheme());
 };
 
 /** Keep following the system while no explicit choice is stored. */

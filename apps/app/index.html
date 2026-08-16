@@ -11,7 +11,7 @@
         const stored = localStorage.getItem("entwine-theme");
         const system = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         document.documentElement.dataset.theme =
-          stored === "light" || stored === "dark" ? stored : system;
+          stored === "dark" ? "dark" : stored === "system" ? system : "light";
       })();
     </script>
   </head>

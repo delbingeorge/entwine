@@ -23,7 +23,7 @@ function AuthCallbackPage() {
 
       getMe()
         .then(() => {
-          void navigate({ replace: true, search: { thread: "" }, to: "/" });
+          void navigate({ replace: true, search: {}, to: "/" });
         })
         .catch((cause: unknown) => {
           console.error("me request failed", cause);

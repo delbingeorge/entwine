@@ -18,7 +18,7 @@ export const Route = createFileRoute("/onboarding")({
     }
 
     if ((await getProfile()) !== null) {
-      throw redirect({ replace: true, search: { thread: "" }, to: "/" });
+      throw redirect({ replace: true, search: {}, to: "/" });
     }
   },
   component: OnboardingScreen,

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { useLightTheme } from "@/shared/hooks/use-light-theme";
 import { cn } from "@/shared/lib/cn";
 
 import { BrandMark } from "./brand-mark";
@@ -23,36 +24,46 @@ const platePhotographers: PlatePhotographer[] = [];
 
 interface SplitLayoutProps {
   children: ReactNode;
+  followsTheme?: boolean;
   headerAside?: ReactNode;
   wide?: boolean;
 }
 
-export const SplitLayout = ({ children, headerAside, wide = false }: SplitLayoutProps) => (
-  <div className="grid min-h-screen lg:grid-cols-2">
-    <div className="flex flex-col px-8 lg:px-14">
-      <header className="flex items-center justify-between gap-4 py-6">
-        <BrandMark />
-        {headerAside}
-      </header>
-      <main className="flex flex-1 items-end pb-8">
-        <div className={cn("w-full", !wide && "max-w-md")}>{children}</div>
-      </main>
+export const SplitLayout = ({
+  children,
+  followsTheme = false,
+  headerAside,
+  wide = false,
+}: SplitLayoutProps) => {
+  useLightTheme(!followsTheme);
+
+  return (
+    <div className="grid min-h-screen lg:grid-cols-2">
+      <div className="flex flex-col px-8 lg:px-14">
+        <header className="flex items-center justify-between gap-4 py-6">
+          <BrandMark />
+          {headerAside}
+        </header>
+        <main className="flex flex-1 items-end pb-8">
+          <div className={cn("w-full", !wide && "max-w-md")}>{children}</div>
+        </main>
+      </div>
+      <section className="group relative hidden h-full lg:block">
+        <MorphSlider
+          autoplay
+          autoplayDelay={5}
+          drift={0.4}
+          duration={1.4}
+          intensity={0.3}
+          items={plateSlides}
+          radius={0}
+          showCaptions={false}
+          showControls={false}
+          showIndicators={false}
+          transition="melt"
+        />
+        <PlateCredit photographers={platePhotographers} />
+      </section>
     </div>
-    <section className="group relative hidden h-full lg:block">
-      <MorphSlider
-        autoplay
-        autoplayDelay={5}
-        drift={0.4}
-        duration={1.4}
-        intensity={0.3}
-        items={plateSlides}
-        radius={0}
-        showCaptions={false}
-        showControls={false}
-        showIndicators={false}
-        transition="melt"
-      />
-      <PlateCredit photographers={platePhotographers} />
-    </section>
-  </div>
-);
+  );
+};

@@ -34,7 +34,7 @@ gsap.registerPlugin(Flip);
 
 export const ChatScreen = () => {
   const { thread } = useSearch({ from: "/" });
-  const history = useThreads(thread);
+  const history = useThreads(thread ?? "");
   const name = useDisplayName();
   const [callState, setCallState] = useState({ caption: "", isOpen: false, startedAt: 0 });
 
