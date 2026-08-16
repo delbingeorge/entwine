@@ -45,7 +45,7 @@ export const CallWidget = ({
 
   return (
     <div
-      className="fixed right-6 bottom-6 z-40 flex w-[300px] items-center gap-2.5 rounded-3xl border border-composer-line bg-composer-surface p-2.5 font-ui shadow-[0_8px_24px_rgba(0,0,0,0.05)]"
+      className="fixed right-6 bottom-6 z-40 flex w-[300px] items-center gap-2 rounded-3xl border border-composer-line bg-composer-surface p-2.5 font-ui shadow-[0_8px_24px_rgba(0,0,0,0.05)]"
       ref={rootRef}
     >
       <button
