@@ -5,13 +5,14 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { LucideIcon } from "@/shared/components/lucide-icon";
 import { TabBar } from "@/shared/components/tab-bar";
 import { getProfile, type Profile } from "@/shared/lib/profile-api";
+import { profileTabs, type ProfileTab } from "@/shared/lib/profile-tabs";
 import { getSession } from "@/shared/lib/session";
-import { settingsTabs, type SettingsTab } from "@/shared/lib/settings-tabs";
 import { supabase } from "@/shared/lib/supabase";
 
 import { AboutPanel } from "./about-panel";
 import { AccountPanel } from "./account-panel";
-import { ProfilePanel } from "./profile-panel";
+import { ResumePanel } from "./resume-panel";
+import { SavedJobsPanel } from "./saved-jobs-panel";
 
 const readName = (metadata: Record<string, unknown>) => {
   const raw = metadata.name ?? metadata.full_name;
@@ -19,9 +20,9 @@ const readName = (metadata: Record<string, unknown>) => {
   return typeof raw === "string" ? raw : "";
 };
 
-export const SettingsScreen = () => {
+export const ProfileScreen = () => {
   const navigate = useNavigate();
-  const { tab } = useSearch({ from: "/settings" });
+  const { tab } = useSearch({ from: "/profile" });
   const [account, setAccount] = useState({ email: "", name: "" });
   const [profile, setProfile] = useState<Profile | null>(null);
 
@@ -66,14 +67,14 @@ export const SettingsScreen = () => {
               Back
             </button>
             <h1 className="pt-3 text-[32px] leading-tight font-semibold tracking-tight text-composer-ink">
-              Settings
+              Profile
             </h1>
             <TabBar
               current={tab}
-              onChange={(next: SettingsTab) => {
-                void navigate({ replace: true, search: { tab: next }, to: "/settings" });
+              onChange={(next: ProfileTab) => {
+                void navigate({ replace: true, search: { tab: next }, to: "/profile" });
               }}
-              tabs={settingsTabs}
+              tabs={profileTabs}
             />
           </div>
 
@@ -88,7 +89,8 @@ export const SettingsScreen = () => {
                 profile={profile}
               />
             ) : null}
-            {tab === "Profile" ? <ProfilePanel /> : null}
+            {tab === "Resume" ? <ResumePanel /> : null}
+            {tab === "Saved jobs" ? <SavedJobsPanel /> : null}
             {tab === "About" ? <AboutPanel /> : null}
           </div>
         </div>

@@ -134,7 +134,9 @@ export const ChatScreen = () => {
         <div className="grid min-h-0 flex-1 px-8 pb-4" style={{ gridTemplateRows: "1fr auto" }}>
           <Transcript
             invite={
-              canCall && callState.startedAt === 0 ? <CallInvite onJoin={toggleCall} /> : undefined
+              canCall ? (
+                <CallInvite isVisible={callState.startedAt === 0} onJoin={toggleCall} />
+              ) : undefined
             }
             onOpenJob={threads.open}
             onStartEdit={chat.startEdit}

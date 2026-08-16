@@ -12,7 +12,7 @@ const Empty = ({ children }: { children: string }) => (
   <p className="text-[12.5px] leading-relaxed text-composer-placeholder">{children}</p>
 );
 
-export const ProfilePanel = () => {
+export const ResumePanel = () => {
   const [detail, setDetail] = useState<ProfileDetail>(emptyDetail);
   const [isLoading, setIsLoading] = useState(true);
   const [failure, setFailure] = useState<string | null>(null);

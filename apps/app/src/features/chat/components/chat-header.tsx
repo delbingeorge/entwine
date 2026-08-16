@@ -9,7 +9,7 @@ import { BrandMark } from "@/shared/components/brand-mark";
 import { LucideIcon } from "@/shared/components/lucide-icon";
 import { usePressMenu } from "@/shared/hooks/use-press-menu";
 import { coachingTabs, type CoachingTab } from "@/shared/lib/coaching-tabs";
-import { settingsTabs, type SettingsTab } from "@/shared/lib/settings-tabs";
+import { profileTabs, type ProfileTab } from "@/shared/lib/profile-tabs";
 import type { ThreadSummary } from "@/shared/lib/thread-api";
 
 import { jobById } from "../jobs";
@@ -45,16 +45,16 @@ export const ChatHeader = ({
   const navigate = useNavigate();
   const current = threads.find((thread) => thread.id === currentThreadId);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const openSettings = (tab: SettingsTab) => {
-    void navigate({ search: { tab }, to: "/settings" });
+  const openProfile = (tab: ProfileTab) => {
+    void navigate({ search: { tab }, to: "/profile" });
   };
 
   const openCoaching = (tab: CoachingTab) => {
     void navigate({ search: { tab }, to: "/coaching" });
   };
 
-  const settingsMenu = usePressMenu((index) => {
-    openSettings(settingsTabs[index] ?? "Account");
+  const profileMenu = usePressMenu((index) => {
+    openProfile(profileTabs[index] ?? "Account");
   });
 
   const coachingMenu = usePressMenu((index) => {
@@ -125,27 +125,27 @@ export const ChatHeader = ({
               aria-label="Profile"
               className="flex size-6 touch-none items-center justify-center rounded-full text-composer-soft transition-colors hover:text-composer-ink"
               onClick={() => {
-                if (settingsMenu.didHold()) {
+                if (profileMenu.didHold()) {
                   return;
                 }
 
-                openSettings("Account");
+                openProfile("Account");
               }}
               title="Profile. Hold for sections."
               type="button"
-              {...settingsMenu.triggerProps}
+              {...profileMenu.triggerProps}
             >
               <UserCircleIcon className="size-4" />
             </button>
-            {settingsMenu.isOpen ? (
+            {profileMenu.isOpen ? (
               <JumpMenu
-                activeIndex={settingsMenu.activeIndex}
-                onClose={settingsMenu.close}
-                onPick={(tab: SettingsTab) => {
-                  settingsMenu.close();
-                  openSettings(tab);
+                activeIndex={profileMenu.activeIndex}
+                onClose={profileMenu.close}
+                onPick={(tab: ProfileTab) => {
+                  profileMenu.close();
+                  openProfile(tab);
                 }}
-                tabs={settingsTabs}
+                tabs={profileTabs}
               />
             ) : null}
           </div>
