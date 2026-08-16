@@ -4,6 +4,11 @@ export default [
   ...reactConfig,
   { ignores: ["src/route-tree.gen.ts"] },
   {
+    // Build-time constants injected by Vite use its __NAME__ convention.
+    files: ["src/vite-env.d.ts"],
+    rules: { "@typescript-eslint/naming-convention": "off" },
+  },
+  {
     files: ["src/**/*.ts", "src/**/*.tsx"],
     rules: {
       // TanStack Router signals redirects by throwing a non-Error Redirect.

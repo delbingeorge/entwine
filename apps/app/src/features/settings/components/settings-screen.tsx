@@ -9,6 +9,7 @@ import { getSession } from "@/shared/lib/session";
 import { settingsTabs, type SettingsTab } from "@/shared/lib/settings-tabs";
 import { supabase } from "@/shared/lib/supabase";
 
+import { AboutPanel } from "./about-panel";
 import { AccountPanel } from "./account-panel";
 import { ProfilePanel } from "./profile-panel";
 
@@ -88,9 +89,7 @@ export const SettingsScreen = () => {
               />
             ) : null}
             {tab === "Profile" ? <ProfilePanel /> : null}
-            {tab === "About" ? (
-              <p className="text-[12.5px] leading-relaxed text-composer-soft">Not built yet.</p>
-            ) : null}
+            {tab === "About" ? <AboutPanel /> : null}
           </div>
         </div>
       </div>
