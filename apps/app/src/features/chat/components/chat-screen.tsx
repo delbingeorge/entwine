@@ -1,11 +1,16 @@
+import { useCallback, useRef } from "react";
+
 import { useSearch } from "@tanstack/react-router";
 
+import { isVoiceSupported, useVoiceCall } from "@/shared/hooks/use-voice-call";
 import { importResume } from "@/shared/lib/profile-detail-api";
 
 import { useChat } from "../hooks/use-chat";
 import { useJobThreads } from "../hooks/use-job-threads";
 import { useThreads } from "../hooks/use-threads";
 import { classifyFile, humanSize } from "../lib/classify-file";
+import { htmlToText } from "../lib/html-to-text";
+import { renderMarkdown } from "../lib/render-markdown";
 
 import { ChatHeader } from "./chat-header";
 import { Composer } from "./composer";
@@ -17,7 +22,45 @@ import "../styles/md-body.css";
 export const ChatScreen = () => {
   const { thread } = useSearch({ from: "/" });
   const history = useThreads(thread);
-  const chat = useChat({ onSettled: history.syncTitles, threadId: history.currentId });
+  const isOnCall = useRef(false);
+
+  const chat = useChat({
+    onReply: (text) => {
+      if (isOnCall.current) {
+        call.speak(htmlToText(renderMarkdown(text)), call.listen);
+      }
+    },
+    onSettled: history.syncTitles,
+    threadId: history.currentId,
+  });
+
+  const call = useVoiceCall({
+    onHeard: useCallback(
+      (text: string) => {
+        chat.setValue("");
+        chat.say(text);
+      },
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [chat.say],
+    ),
+    onInterim: chat.setValue,
+  });
+
+  const current = history.threads.find((entry) => entry.id === history.currentId);
+  const canCall = current?.kind === "coaching" && isVoiceSupported();
+
+  const toggleCall = () => {
+    if (call.isCalling || isOnCall.current) {
+      isOnCall.current = false;
+      call.stop();
+      chat.setValue("");
+
+      return;
+    }
+
+    isOnCall.current = true;
+    call.listen();
+  };
   const threads = useJobThreads();
 
   return (
@@ -44,7 +87,9 @@ export const ChatScreen = () => {
           />
           <Composer
             attachment={chat.attachment}
+            canCall={canCall}
             isBusy={chat.isBusy}
+            isCalling={call.isCalling || isOnCall.current}
             isEditing={chat.isEditing}
             onCancelEdit={() => {
               chat.setValue("");
@@ -73,6 +118,7 @@ export const ChatScreen = () => {
             onRemoveAttachment={() => {
               chat.setAttachment(null);
             }}
+            onToggleCall={toggleCall}
             onSubmit={chat.submit}
             onValueChange={chat.setValue}
             value={chat.value}

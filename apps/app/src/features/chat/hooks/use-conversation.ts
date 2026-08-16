@@ -9,12 +9,13 @@ import { createReveal } from "../lib/reveal";
 import type { Attachment, Turn, UserTurn } from "../types";
 
 interface ConversationOptions {
+  onReply?: (text: string) => void;
   onSettled?: () => void;
   seed: Turn[];
   threadId: string | null;
 }
 
-export const useConversation = ({ onSettled, seed, threadId }: ConversationOptions) => {
+export const useConversation = ({ onReply, onSettled, seed, threadId }: ConversationOptions) => {
   const [turns, setTurns] = useState<Turn[]>(seed);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [value, setValue] = useState("");
@@ -123,6 +124,7 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
       });
 
       await reveal.settle(markdown.length);
+      onReply?.(markdown);
 
       setTurns((current) =>
         current
@@ -167,6 +169,18 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
     setIsBusy(false);
   };
 
+  const say = (text: string) => {
+    if (isBusy || text.trim() === "") {
+      return;
+    }
+
+    setTurns((current) => [
+      ...current,
+      { id: nextId.current++, role: "user", text, attachment: null },
+    ]);
+    void respond(text);
+  };
+
   const submit = () => {
     if (isBusy) {
       stop();
@@ -199,6 +213,7 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
     },
     isBusy,
     isEditing: editing !== null,
+    say,
     setAttachment,
     setValue,
     startEdit: (turn: UserTurn) => {
