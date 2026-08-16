@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import { useSearch } from "@tanstack/react-router";
+import { gsap } from "gsap";
+import { Flip } from "gsap/Flip";
 
+import { useDisplayName } from "@/shared/hooks/use-display-name";
 import { useMountTransition } from "@/shared/hooks/use-mount-transition";
-import { importResume } from "@/shared/lib/profile-detail-api";
 
 import {
-  CallInvite,
   CallWidget,
   playEndSound,
   playJoinSound,
@@ -18,18 +19,22 @@ import { agentName } from "../data";
 import { useChat } from "../hooks/use-chat";
 import { useJobThreads } from "../hooks/use-job-threads";
 import { useThreads } from "../hooks/use-threads";
-import { classifyFile, humanSize } from "../lib/classify-file";
+import { introCopy } from "../lib/intro-copy";
 
 import { ChatHeader } from "./chat-header";
-import { Composer } from "./composer";
 import { JobThread } from "./job-thread";
+import { ThreadComposer } from "./thread-composer";
+import { ThreadIntro } from "./thread-intro";
 import { Transcript } from "./transcript";
 
 import "../styles/md-body.css";
 
+gsap.registerPlugin(Flip);
+
 export const ChatScreen = () => {
   const { thread } = useSearch({ from: "/" });
   const history = useThreads(thread);
+  const name = useDisplayName();
   const [callState, setCallState] = useState({ caption: "", isOpen: false, startedAt: 0 });
 
   const chat = useChat({
@@ -79,6 +84,54 @@ export const ChatScreen = () => {
     void call.start(history.currentId);
   };
   const threads = useJobThreads();
+  const isEmpty = chat.turns.length === 0;
+  const flipState = useRef<Flip.FlipState | null>(null);
+
+  useLayoutEffect(() => {
+    if (flipState.current === null) {
+      return;
+    }
+
+    Flip.from(flipState.current, {
+      absolute: true,
+      duration: 0.62,
+      ease: "power3.inOut",
+      onLeave: (leaving) => gsap.to(leaving, { autoAlpha: 0, y: -12, duration: 0.28 }),
+    });
+
+    flipState.current = null;
+  }, [isEmpty]);
+
+  const send = () => {
+    if (isEmpty) {
+      try {
+        flipState.current = Flip.getState("[data-flip-id]");
+      } catch (cause) {
+        console.error("could not capture the layout", cause);
+        flipState.current = null;
+      }
+    }
+
+    chat.submit();
+  };
+
+  const startNewThread = () => {
+    // Already sitting on a blank thread, so reuse it rather than making another.
+    if (isEmpty) {
+      return;
+    }
+
+    history.startNew();
+  };
+
+  const composer = (
+    <ThreadComposer
+      canCall={canCall && callState.startedAt === 0}
+      chat={chat}
+      onJoinCall={toggleCall}
+      onSubmit={send}
+    />
+  );
 
   return (
     <div className="flex h-screen flex-col bg-surface">
@@ -122,7 +175,7 @@ export const ChatScreen = () => {
         currentThreadId={history.currentId}
         onDeleteThread={history.remove}
         onLeaveSession={history.leaveSession}
-        onNewThread={history.startNew}
+        onNewThread={startNewThread}
         onOpenJob={threads.open}
         onSelectThread={history.select}
         startedIds={threads.startedIds}
@@ -131,56 +184,24 @@ export const ChatScreen = () => {
       />
 
       {threads.openJob === undefined ? (
-        <div className="grid min-h-0 flex-1 px-8 pb-4" style={{ gridTemplateRows: "1fr auto" }}>
-          <Transcript
-            invite={
-              canCall ? (
-                <CallInvite isVisible={callState.startedAt === 0} onJoin={toggleCall} />
-              ) : undefined
-            }
-            onOpenJob={threads.open}
-            onStartEdit={chat.startEdit}
-            statusOf={threads.statusOf}
-            turns={chat.turns}
-          />
-          <div>
-            <Composer
-              attachment={chat.attachment}
-              isBusy={chat.isBusy}
-              isEditing={chat.isEditing}
-              onCancelEdit={() => {
-                chat.setValue("");
-                chat.cancelEdit();
-              }}
-              onFile={(file) => {
-                if (file === undefined) {
-                  return;
-                }
-
-                const kind = classifyFile(file);
-                chat.setAttachment({
-                  id: Date.now(),
-                  name: file.name,
-                  kind,
-                  size: humanSize(file.size),
-                  url: kind === "image" ? URL.createObjectURL(file) : undefined,
-                });
-
-                if (kind === "pdf") {
-                  importResume(file).catch((cause: unknown) => {
-                    console.error("resume import failed", cause);
-                  });
-                }
-              }}
-              onRemoveAttachment={() => {
-                chat.setAttachment(null);
-              }}
-              onSubmit={chat.submit}
-              onValueChange={chat.setValue}
-              value={chat.value}
-            />
+        isEmpty ? (
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-8 pb-16">
+            <div className="flex w-full max-w-2xl flex-col">
+              <ThreadIntro {...introCopy(canCall, name, current?.title ?? "")} />
+              {composer}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="grid min-h-0 flex-1 px-8 pb-4" style={{ gridTemplateRows: "1fr auto" }}>
+            <Transcript
+              onOpenJob={threads.open}
+              onStartEdit={chat.startEdit}
+              statusOf={threads.statusOf}
+              turns={chat.turns}
+            />
+            {composer}
+          </div>
+        )
       ) : (
         <JobThread
           job={threads.openJob}

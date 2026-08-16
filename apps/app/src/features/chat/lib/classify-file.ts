@@ -1,4 +1,4 @@
-import type { AttachmentKind } from "../types";
+import type { Attachment, AttachmentKind } from "../types";
 
 const imageExtensions = ["png", "jpg", "jpeg", "gif", "webp", "svg", "avif"];
 const codeExtensions = [
@@ -53,3 +53,15 @@ export const kindIcon = {
   code: "file-braces",
   image: "image",
 } as const;
+
+export const attachmentFromFile = (file: File): Attachment => {
+  const kind = classifyFile(file);
+
+  return {
+    id: Date.now(),
+    name: file.name,
+    kind,
+    size: humanSize(file.size),
+    url: kind === "image" ? URL.createObjectURL(file) : undefined,
+  };
+};

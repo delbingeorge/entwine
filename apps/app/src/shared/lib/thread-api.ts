@@ -25,18 +25,13 @@ export const listThreads = () => apiRequest("/v1/threads", z.array(threadSchema)
 
 interface NewThread {
   kind?: "coaching" | "main";
-  scenario?: string;
   title?: string;
 }
 
 export const createThread = (thread: NewThread = {}) =>
   apiRequest("/v1/threads", threadSchema, {
     method: "POST",
-    body: JSON.stringify({
-      kind: thread.kind ?? "main",
-      scenario: thread.scenario ?? "",
-      title: thread.title ?? "",
-    }),
+    body: JSON.stringify({ kind: thread.kind ?? "main", title: thread.title ?? "" }),
   });
 
 export const getThreadMessages = (threadId: string) =>

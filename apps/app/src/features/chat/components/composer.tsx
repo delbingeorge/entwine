@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 
+import { MicrophoneIcon } from "@solar-icons/react/linear/microphone";
+
 import { LucideIcon } from "@/shared/components/lucide-icon";
 
 import { useCardBreathe } from "../hooks/use-card-breathe";
@@ -12,10 +14,12 @@ import type { Attachment } from "../types";
 
 interface ComposerProps {
   attachment: Attachment | null;
+  canCall?: boolean;
   isBusy: boolean;
   isEditing: boolean;
   onCancelEdit: () => void;
   onFile: (file: File | undefined) => void;
+  onJoinCall?: () => void;
   onRemoveAttachment: () => void;
   onSubmit: () => void;
   onValueChange: (value: string) => void;
@@ -24,10 +28,12 @@ interface ComposerProps {
 
 export const Composer = ({
   attachment,
+  canCall = false,
   isBusy,
   isEditing,
   onCancelEdit,
   onFile,
+  onJoinCall,
   onRemoveAttachment,
   onSubmit,
   onValueChange,
@@ -121,6 +127,17 @@ export const Composer = ({
                     ref={fileRef}
                     type="file"
                   />
+                  {canCall ? (
+                    <button
+                      className="flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-composer-line bg-composer-surface px-3 text-[12.5px] text-composer-ink transition-colors hover:bg-composer-track"
+                      onClick={onJoinCall}
+                      title="Practise out loud with Ellie"
+                      type="button"
+                    >
+                      <MicrophoneIcon className="size-4" />
+                      Join call
+                    </button>
+                  ) : null}
                   <button
                     aria-label={isBusy ? "Stop generating" : "Send message"}
                     className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-full bg-composer-solid text-composer-solid-ink disabled:opacity-30"

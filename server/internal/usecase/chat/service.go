@@ -63,7 +63,7 @@ func NewService(
 const historyDepth = 30
 
 func (s *Service) StartThread(
-	ctx context.Context, userID string, kind domain.ThreadKind, title, scenario string,
+	ctx context.Context, userID string, kind domain.ThreadKind, title string,
 ) (domain.Thread, error) {
 	thread, err := domain.NewThread(domain.Thread{UserID: userID, Kind: kind, Title: title})
 	if err != nil {
@@ -73,19 +73,6 @@ func (s *Service) StartThread(
 	created, err := s.threads.Create(ctx, thread, s.now())
 	if err != nil {
 		return domain.Thread{}, fmt.Errorf("start thread: %w", err)
-	}
-
-	opening, err := domain.NewChatMessage(domain.ChatMessage{
-		ThreadID: created.ID,
-		Role:     domain.MessageRoleAgent,
-		Content:  openingMessage(created.Kind, created.Title, scenario),
-	})
-	if err != nil {
-		return domain.Thread{}, err
-	}
-
-	if _, err := s.threads.Append(ctx, opening, s.now()); err != nil {
-		return domain.Thread{}, fmt.Errorf("store opening: %w", err)
 	}
 
 	return created, nil
