@@ -54,7 +54,7 @@ export const CallWidget = ({
         onClick={onOpen}
         type="button"
       >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-composer-track">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-composer-track">
           <UserIcon className="size-5 text-composer-placeholder" />
         </span>
         <span className="min-w-0">

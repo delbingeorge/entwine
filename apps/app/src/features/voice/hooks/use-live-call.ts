@@ -164,6 +164,7 @@ export const useLiveCall = ({ onFailure, onTranscript }: LiveCallOptions) => {
   );
 
   return {
+    getLevel: useCallback(() => playback.current.level(), []),
     isLive,
     isMuted,
     isSilent,

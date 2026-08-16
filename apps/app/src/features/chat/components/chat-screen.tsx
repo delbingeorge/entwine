@@ -76,6 +76,7 @@ export const ChatScreen = () => {
       {callScreen.isMounted ? (
         <VoiceCallScreen
           agentName={agentName}
+          getLevel={call.getLevel}
           caption={callState.caption}
           isMuted={call.isMuted}
           isSilent={call.isSilent}

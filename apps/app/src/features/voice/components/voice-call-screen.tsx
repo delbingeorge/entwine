@@ -2,7 +2,6 @@ import type { RefObject } from "react";
 
 import { EndCallIcon } from "@solar-icons/react/linear/end-call";
 import { MicrophoneIcon } from "@solar-icons/react/linear/microphone";
-import { UserIcon } from "@solar-icons/react/linear/user";
 import { VolumeCrossIcon } from "@solar-icons/react/linear/volume-cross";
 import { VolumeLoudIcon } from "@solar-icons/react/linear/volume-loud";
 
@@ -12,11 +11,13 @@ import { useElapsed } from "../hooks/use-elapsed";
 import { formatElapsed } from "../lib/elapsed";
 
 import { Control, ControlBar } from "./call-controls";
+import { VoiceOrb } from "./voice-orb";
 
 import type { LiveStatus } from "../hooks/use-live-call";
 
 interface VoiceCallScreenProps {
   agentName: string;
+  getLevel: () => number;
   caption: string;
   isMuted: boolean;
   isSilent: boolean;
@@ -32,6 +33,7 @@ interface VoiceCallScreenProps {
 
 export const VoiceCallScreen = ({
   agentName,
+  getLevel,
   caption,
   isMuted,
   isSilent,
@@ -67,9 +69,7 @@ export const VoiceCallScreen = ({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-5">
-        <div className="flex size-[248px] items-center justify-center rounded-[28px] bg-composer-track">
-          <UserIcon className="size-24 text-composer-placeholder" />
-        </div>
+        <VoiceOrb getLevel={getLevel} />
 
         <p className="text-[20px] font-semibold text-composer-ink">{agentName}</p>
 
