@@ -50,12 +50,17 @@ export const streamChat = async ({ onToken, signal, text, threadId }: StreamOpti
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
+  let tokens = 0;
 
   for (;;) {
     const { done, value } = await reader.read();
 
     if (done) {
-      break;
+      throw new AppError(
+        "chat_failed",
+        tokens === 0 ? "Ellie could not answer just now." : "Ellie stopped mid-answer.",
+        502,
+      );
     }
 
     buffer += decoder.decode(value, { stream: true });
@@ -65,6 +70,10 @@ export const streamChat = async ({ onToken, signal, text, threadId }: StreamOpti
 
     for (const block of blocks) {
       if (block.startsWith("event: done")) {
+        if (tokens === 0) {
+          throw new AppError("chat_failed", "Ellie could not answer just now.", 502);
+        }
+
         return;
       }
 
@@ -77,6 +86,7 @@ export const streamChat = async ({ onToken, signal, text, threadId }: StreamOpti
       const payload = decodeEvent(block);
 
       if (payload?.text !== undefined) {
+        tokens += 1;
         onToken(payload.text);
       }
     }

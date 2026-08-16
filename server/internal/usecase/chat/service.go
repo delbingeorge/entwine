@@ -10,6 +10,9 @@ import (
 	"github.com/octane/entwine/server/internal/domain"
 )
 
+// ErrQuota reports that the model refused the call because the key is spent.
+var ErrQuota = errors.New("model quota exhausted")
+
 type Message struct {
 	Role string
 	Text string

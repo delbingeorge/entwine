@@ -3,11 +3,13 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/octane/entwine/server/internal/domain"
+	"github.com/octane/entwine/server/internal/usecase/chat"
 )
 
 type ChatService interface {
@@ -83,7 +85,13 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 
 		if err := chats.Reply(ctx, current.user.ID, request.ThreadID, request.Text, emit); err != nil {
 			logger.ErrorContext(ctx, "chat reply", slog.Any("error", err))
-			writeStreamError(w, flusher)
+
+			message := "Ellie could not answer just now."
+			if errors.Is(err, chat.ErrQuota) {
+				message = "Ellie has used up today's model quota. Try again tomorrow."
+			}
+
+			writeStreamError(w, flusher, message)
 
 			return
 		}
@@ -93,10 +101,12 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 	}
 }
 
-func writeStreamError(w http.ResponseWriter, flusher http.Flusher) {
-	_, _ = w.Write([]byte(`event: error
-data: {"message":"Ellie could not answer just now."}
+func writeStreamError(w http.ResponseWriter, flusher http.Flusher, message string) {
+	payload, err := json.Marshal(map[string]string{"message": message})
+	if err != nil {
+		return
+	}
 
-`))
+	_, _ = w.Write([]byte("event: error\ndata: " + string(payload) + "\n\n"))
 	flusher.Flush()
 }

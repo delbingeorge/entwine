@@ -81,6 +81,10 @@ func (r *GeminiResponder) Stream(
 		return fmt.Errorf("read response: %w", err)
 	}
 
+	if response.StatusCode == http.StatusTooManyRequests {
+		return fmt.Errorf("%w: %s", chat.ErrQuota, truncate(string(payload), 300))
+	}
+
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("gemini returned %d: %s", response.StatusCode, truncate(string(payload), 300))
 	}

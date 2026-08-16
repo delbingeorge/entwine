@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
+import { AppError } from "@/shared/lib/api-client";
 import { streamChat } from "@/shared/lib/chat-api";
 
+import { escapeHtml } from "../lib/escape-html";
 import { loadTurns } from "../lib/load-turns";
 import { renderMarkdown } from "../lib/render-markdown";
 import { createReveal } from "../lib/reveal";
@@ -132,12 +134,16 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
 
       if (!controller.signal.aborted) {
         console.error("chat failed", cause);
+
+        const reason =
+          cause instanceof AppError ? cause.message : "I could not answer just now. Try again.";
+
         write((current) => [
           ...current.filter((turn) => turn.id !== thinkingId && turn.id !== agentId),
           {
             id: nextId.current++,
             role: "agent",
-            html: "<p>I could not answer just now. Try again in a moment.</p>",
+            html: `<p>${escapeHtml(reason)}</p>`,
             isStreaming: false,
           },
         ]);
