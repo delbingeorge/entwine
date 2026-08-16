@@ -41,11 +41,8 @@ export const HistoryDialog = ({
 }: HistoryDialogProps) => {
   const { isMounted, panelRef, scrimRef } = useDialogTransition(isOpen);
   const [query, setQuery] = useState("");
-  const [activeIndex, setActiveIndex] = useState(() =>
-    Math.max(
-      0,
-      threads.findIndex((thread) => thread.id === currentId),
-    ),
+  const [activeIndex, setActiveIndex] = useState(
+    () => threads.findIndex((thread) => thread.id === currentId) + 1,
   );
 
   useEffect(() => {
@@ -72,10 +69,10 @@ export const HistoryDialog = ({
 
   const options = ordered.length + 1;
   const safeIndex = activeIndex >= options ? 0 : activeIndex;
-  const isNewActive = safeIndex === ordered.length;
+  const isNewActive = safeIndex === 0;
 
   const choose = (index: number) => {
-    const thread = ordered[index];
+    const thread = ordered[index - 1];
 
     if (thread === undefined) {
       if (canStartNew) {
@@ -146,49 +143,20 @@ export const HistoryDialog = ({
         </label>
 
         <div
-          className="max-h-[min(58vh,22rem)] min-h-40 overflow-y-auto py-1"
+          className="max-h-[min(66vh,30rem)] min-h-48 overflow-y-auto"
           id="history-options"
           role="listbox"
         >
-          <HistoryGroup
-            activeIndex={safeIndex}
-            currentId={currentId}
-            emptyLabel="No chats match that search."
-            label="CHATS"
-            offset={0}
-            onDelete={onDelete}
-            onHover={setActiveIndex}
-            onSelect={onSelect}
-            rowId={rowId}
-            threads={chats}
-          />
-
-          {sessions.length === 0 ? null : (
-            <HistoryGroup
-              activeIndex={safeIndex}
-              currentId={currentId}
-              label="COACHING"
-              offset={chats.length}
-              onDelete={onDelete}
-              onHover={setActiveIndex}
-              onSelect={onSelect}
-              rowId={rowId}
-              threads={sessions}
-            />
-          )}
-
-          <HistoryJobs jobs={jobs} onOpenJob={onOpenJob} />
-
-          <div>
-            <p className="px-4 pt-2.5 pb-1 text-[10px] tracking-widest text-composer-placeholder">
+          <div className="sticky top-0 z-10 border-b border-composer-line bg-composer-surface pt-1">
+            <p className="px-4 pt-1.5 pb-1 text-[10px] tracking-widest text-composer-placeholder">
               ACTIONS
             </p>
             <div
               aria-selected={isNewActive}
               className={`group flex w-full items-center pr-2 ${isNewActive ? "bg-composer-track" : ""}`}
-              id={rowId(ordered.length)}
+              id={rowId(0)}
               onMouseMove={() => {
-                setActiveIndex(ordered.length);
+                setActiveIndex(0);
               }}
               role="option"
             >
@@ -217,6 +185,35 @@ export const HistoryDialog = ({
               </button>
             </div>
           </div>
+
+          <HistoryGroup
+            activeIndex={safeIndex}
+            currentId={currentId}
+            emptyLabel="No chats match that search."
+            label="CHATS"
+            offset={1}
+            onDelete={onDelete}
+            onHover={setActiveIndex}
+            onSelect={onSelect}
+            rowId={rowId}
+            threads={chats}
+          />
+
+          {sessions.length === 0 ? null : (
+            <HistoryGroup
+              activeIndex={safeIndex}
+              currentId={currentId}
+              label="COACHING"
+              offset={chats.length + 1}
+              onDelete={onDelete}
+              onHover={setActiveIndex}
+              onSelect={onSelect}
+              rowId={rowId}
+              threads={sessions}
+            />
+          )}
+
+          <HistoryJobs jobs={jobs} onOpenJob={onOpenJob} />
         </div>
       </div>
     </div>
