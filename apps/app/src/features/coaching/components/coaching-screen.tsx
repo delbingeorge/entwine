@@ -5,9 +5,8 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { LucideIcon } from "@/shared/components/lucide-icon";
 import { TabBar } from "@/shared/components/tab-bar";
 import { coachingTabs, type CoachingTab } from "@/shared/lib/coaching-tabs";
+import { scenariosByTab, type Scenario } from "@/shared/lib/scenarios";
 import { createThread } from "@/shared/lib/thread-api";
-
-import { scenariosByTab, type Scenario } from "../scenarios";
 
 import { ScenarioCard } from "./scenario-card";
 

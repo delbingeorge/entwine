@@ -1,6 +1,5 @@
 import { LucideIcon } from "@/shared/components/lucide-icon";
-
-import type { Scenario } from "../scenarios";
+import type { Scenario } from "@/shared/lib/scenarios";
 
 interface ScenarioCardProps {
   isBusy: boolean;

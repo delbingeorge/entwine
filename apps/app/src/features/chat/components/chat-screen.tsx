@@ -6,6 +6,7 @@ import { Flip } from "gsap/Flip";
 
 import { useDisplayName } from "@/shared/hooks/use-display-name";
 import { useMountTransition } from "@/shared/hooks/use-mount-transition";
+import { placeholderFor } from "@/shared/lib/scenarios";
 
 import {
   CallWidget,
@@ -132,6 +133,7 @@ export const ChatScreen = () => {
       chat={chat}
       onJoinCall={toggleCall}
       onSubmit={send}
+      placeholder={placeholderFor(canCall, current?.title ?? "")}
     />
   );
 

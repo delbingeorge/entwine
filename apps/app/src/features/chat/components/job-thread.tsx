@@ -60,6 +60,7 @@ export const JobThread = ({ job, onBack, onStatusChange, status }: JobThreadProp
           onRemoveAttachment={() => {
             chat.setAttachment(null);
           }}
+          placeholder="Ask about this role…"
           onSubmit={chat.submit}
           onValueChange={chat.setValue}
           value={chat.value}

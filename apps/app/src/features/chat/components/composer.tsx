@@ -20,6 +20,7 @@ interface ComposerProps {
   onCancelEdit: () => void;
   onFile: (file: File | undefined) => void;
   onJoinCall?: () => void;
+  placeholder: string;
   onRemoveAttachment: () => void;
   onSubmit: () => void;
   onValueChange: (value: string) => void;
@@ -37,6 +38,7 @@ export const Composer = ({
   onRemoveAttachment,
   onSubmit,
   onValueChange,
+  placeholder,
   value,
 }: ComposerProps) => {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -99,6 +101,7 @@ export const Composer = ({
               ref={cardRef}
             >
               <ComposerField
+                placeholder={placeholder}
                 isDisabled={isBusy}
                 onChange={onValueChange}
                 onSubmit={onSubmit}

@@ -10,9 +10,16 @@ interface ThreadComposerProps {
   chat: ReturnType<typeof useConversation>;
   onJoinCall?: () => void;
   onSubmit: () => void;
+  placeholder: string;
 }
 
-export const ThreadComposer = ({ canCall, chat, onJoinCall, onSubmit }: ThreadComposerProps) => (
+export const ThreadComposer = ({
+  canCall,
+  chat,
+  onJoinCall,
+  onSubmit,
+  placeholder,
+}: ThreadComposerProps) => (
   <div data-flip-id="composer">
     <Composer
       attachment={chat.attachment}
@@ -38,6 +45,7 @@ export const ThreadComposer = ({ canCall, chat, onJoinCall, onSubmit }: ThreadCo
         }
       }}
       onJoinCall={onJoinCall}
+      placeholder={placeholder}
       onRemoveAttachment={() => {
         chat.setAttachment(null);
       }}
