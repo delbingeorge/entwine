@@ -28,6 +28,7 @@ export const useLiveCall = ({ onFailure, onTranscript }: LiveCallOptions) => {
   const muted = useRef(false);
   const silent = useRef(false);
   const live = useRef(false);
+  const ending = useRef(false);
   const report = useRef(onFailure);
   const transcript = useRef(onTranscript);
 
@@ -35,6 +36,7 @@ export const useLiveCall = ({ onFailure, onTranscript }: LiveCallOptions) => {
   transcript.current = onTranscript;
 
   const stop = useCallback(() => {
+    ending.current = true;
     socket.current?.close();
     socket.current = null;
 
@@ -62,6 +64,8 @@ export const useLiveCall = ({ onFailure, onTranscript }: LiveCallOptions) => {
 
   const start = useCallback(
     async (threadId: string) => {
+      ending.current = false;
+
       try {
         const auth = await getSession();
 
@@ -143,7 +147,7 @@ export const useLiveCall = ({ onFailure, onTranscript }: LiveCallOptions) => {
         };
 
         connection.onclose = (event) => {
-          if (!live.current) {
+          if (!live.current && !ending.current) {
             console.error("voice socket closed before it was ready", event.code, event.reason);
             report.current(
               event.reason === ""

@@ -19,11 +19,13 @@ const coachingOpening = `We'll run this as practice: **%s**.
 
 I'll play the other side and stay in role. After each answer, I'll break for one short note on what to change, then we pick up where we left off.
 
-If I need something from you before we start, such as the job post, the offer, or your current salary, I'll ask for it first. Otherwise, open with the line you'd actually use.`
+Join the call to practise more interactively, or keep typing if you'd rather. If I need something before we start, such as the offer or your current salary, I'll ask for it first.`
 
 const jobPostOpening = `We'll run this as practice: **%s**.
 
 Paste the job description below. The whole posting is fine, and I'll build the interview around that exact role.
+
+Join the call once we start and you can answer out loud, which is closer to the real thing.
 
 I'll play the interviewer and stay in role. After each answer, I'll break for one short note on what to change, then we carry on.`
 

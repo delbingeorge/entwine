@@ -5,7 +5,14 @@ import { useSearch } from "@tanstack/react-router";
 import { useMountTransition } from "@/shared/hooks/use-mount-transition";
 import { importResume } from "@/shared/lib/profile-detail-api";
 
-import { CallWidget, useLiveCall, VoiceCallScreen } from "@/features/voice";
+import {
+  CallInvite,
+  CallWidget,
+  playEndSound,
+  playJoinSound,
+  useLiveCall,
+  VoiceCallScreen,
+} from "@/features/voice";
 
 import { agentName } from "../data";
 import { useChat } from "../hooks/use-chat";
@@ -43,6 +50,7 @@ export const ChatScreen = () => {
   const canCall = current?.kind === "coaching";
 
   const endCall = () => {
+    playEndSound();
     call.stop();
     setCallState({ caption: "", isOpen: false, startedAt: 0 });
   };
@@ -66,6 +74,7 @@ export const ChatScreen = () => {
       return;
     }
 
+    playJoinSound();
     setCallState({ caption: "", isOpen: true, startedAt: Date.now() });
     void call.start(history.currentId);
   };
@@ -124,49 +133,51 @@ export const ChatScreen = () => {
       {threads.openJob === undefined ? (
         <div className="grid min-h-0 flex-1 px-8 pb-4" style={{ gridTemplateRows: "1fr auto" }}>
           <Transcript
+            invite={
+              canCall && callState.startedAt === 0 ? <CallInvite onJoin={toggleCall} /> : undefined
+            }
             onOpenJob={threads.open}
             onStartEdit={chat.startEdit}
             statusOf={threads.statusOf}
             turns={chat.turns}
           />
-          <Composer
-            attachment={chat.attachment}
-            canCall={canCall}
-            isBusy={chat.isBusy}
-            isCalling={callState.startedAt !== 0}
-            isEditing={chat.isEditing}
-            onCancelEdit={() => {
-              chat.setValue("");
-              chat.cancelEdit();
-            }}
-            onFile={(file) => {
-              if (file === undefined) {
-                return;
-              }
+          <div>
+            <Composer
+              attachment={chat.attachment}
+              isBusy={chat.isBusy}
+              isEditing={chat.isEditing}
+              onCancelEdit={() => {
+                chat.setValue("");
+                chat.cancelEdit();
+              }}
+              onFile={(file) => {
+                if (file === undefined) {
+                  return;
+                }
 
-              const kind = classifyFile(file);
-              chat.setAttachment({
-                id: Date.now(),
-                name: file.name,
-                kind,
-                size: humanSize(file.size),
-                url: kind === "image" ? URL.createObjectURL(file) : undefined,
-              });
-
-              if (kind === "pdf") {
-                importResume(file).catch((cause: unknown) => {
-                  console.error("resume import failed", cause);
+                const kind = classifyFile(file);
+                chat.setAttachment({
+                  id: Date.now(),
+                  name: file.name,
+                  kind,
+                  size: humanSize(file.size),
+                  url: kind === "image" ? URL.createObjectURL(file) : undefined,
                 });
-              }
-            }}
-            onRemoveAttachment={() => {
-              chat.setAttachment(null);
-            }}
-            onToggleCall={toggleCall}
-            onSubmit={chat.submit}
-            onValueChange={chat.setValue}
-            value={chat.value}
-          />
+
+                if (kind === "pdf") {
+                  importResume(file).catch((cause: unknown) => {
+                    console.error("resume import failed", cause);
+                  });
+                }
+              }}
+              onRemoveAttachment={() => {
+                chat.setAttachment(null);
+              }}
+              onSubmit={chat.submit}
+              onValueChange={chat.setValue}
+              value={chat.value}
+            />
+          </div>
         </div>
       ) : (
         <JobThread

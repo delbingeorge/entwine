@@ -1,8 +1,5 @@
 import { useRef, useState } from "react";
 
-import { EndCallIcon } from "@solar-icons/react/linear/end-call";
-import { MicrophoneIcon } from "@solar-icons/react/linear/microphone";
-
 import { LucideIcon } from "@/shared/components/lucide-icon";
 
 import { useCardBreathe } from "../hooks/use-card-breathe";
@@ -15,13 +12,10 @@ import type { Attachment } from "../types";
 
 interface ComposerProps {
   attachment: Attachment | null;
-  canCall?: boolean;
   isBusy: boolean;
-  isCalling?: boolean;
   isEditing: boolean;
   onCancelEdit: () => void;
   onFile: (file: File | undefined) => void;
-  onToggleCall?: () => void;
   onRemoveAttachment: () => void;
   onSubmit: () => void;
   onValueChange: (value: string) => void;
@@ -30,13 +24,10 @@ interface ComposerProps {
 
 export const Composer = ({
   attachment,
-  canCall = false,
   isBusy,
-  isCalling = false,
   isEditing,
   onCancelEdit,
   onFile,
-  onToggleCall,
   onRemoveAttachment,
   onSubmit,
   onValueChange,
@@ -130,27 +121,6 @@ export const Composer = ({
                     ref={fileRef}
                     type="file"
                   />
-                  {canCall ? (
-                    <button
-                      aria-label={isCalling ? "End the call" : "Answer out loud"}
-                      aria-pressed={isCalling}
-                      className={`flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[12.5px] transition-colors ${
-                        isCalling
-                          ? "border-transparent bg-composer-solid text-composer-solid-ink"
-                          : "border-composer-line bg-composer-surface text-composer-ink hover:bg-composer-track"
-                      }`}
-                      onClick={onToggleCall}
-                      title={isCalling ? "End the call" : "Answer out loud"}
-                      type="button"
-                    >
-                      {isCalling ? (
-                        <EndCallIcon className="size-4" />
-                      ) : (
-                        <MicrophoneIcon className="size-4" />
-                      )}
-                      {isCalling ? "End" : "Call"}
-                    </button>
-                  ) : null}
                   <button
                     aria-label={isBusy ? "Stop generating" : "Send message"}
                     className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-full bg-composer-solid text-composer-solid-ink disabled:opacity-30"

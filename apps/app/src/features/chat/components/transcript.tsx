@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { jobById } from "../jobs";
 
@@ -10,14 +10,22 @@ import { UserTurnRow } from "./user-turn-row";
 import type { JobStatus, Turn } from "../types";
 
 interface TranscriptProps {
+  invite?: ReactNode;
   onOpenJob?: (id: string) => void;
   onStartEdit: (turn: Extract<Turn, { role: "user" }>) => void;
   statusOf?: (id: string) => JobStatus;
   turns: Turn[];
 }
 
-export const Transcript = ({ onOpenJob, onStartEdit, statusOf, turns }: TranscriptProps) => {
+export const Transcript = ({
+  invite,
+  onOpenJob,
+  onStartEdit,
+  statusOf,
+  turns,
+}: TranscriptProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const firstAgent = turns.findIndex((turn) => turn.role === "agent");
 
   useEffect(() => {
     const scroller = scrollerRef.current;
@@ -31,7 +39,7 @@ export const Transcript = ({ onOpenJob, onStartEdit, statusOf, turns }: Transcri
     <div className="no-scrollbar min-h-0 overflow-y-auto" ref={scrollerRef}>
       <div className="mx-auto w-full max-w-2xl">
         <div className="flex flex-col gap-6 pt-6 pb-8 font-ui">
-          {turns.map((turn) => {
+          {turns.map((turn, index) => {
             if (turn.role === "user") {
               return (
                 <UserTurnRow
@@ -51,6 +59,9 @@ export const Transcript = ({ onOpenJob, onStartEdit, statusOf, turns }: Transcri
             return (
               <div className="flex flex-col gap-3" key={turn.id}>
                 <AgentTurnRow turn={turn} />
+                {index === firstAgent && invite !== undefined ? (
+                  <div className="pl-7">{invite}</div>
+                ) : null}
                 {turn.jobIds === undefined || turn.isStreaming ? null : (
                   <div className="flex flex-col gap-2 pl-7">
                     {turn.jobIds.map((id) => {
