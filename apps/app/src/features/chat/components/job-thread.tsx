@@ -45,7 +45,7 @@ export const JobThread = ({ job, onBack, onStatusChange, status }: JobThreadProp
       </header>
 
       <div className="grid min-h-0 flex-1 px-8 pb-4" style={{ gridTemplateRows: "1fr auto" }}>
-        <Transcript onRetry={chat.retry} onStartEdit={chat.startEdit} turns={chat.turns} />
+        <Transcript onStartEdit={chat.startEdit} turns={chat.turns} />
         <Composer
           attachment={chat.attachment}
           isBusy={chat.isBusy}

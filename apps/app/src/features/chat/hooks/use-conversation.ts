@@ -199,23 +199,6 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
     },
     isBusy,
     isEditing: editing !== null,
-    retry: (turnId: number) => {
-      if (isBusy) {
-        return;
-      }
-
-      const previous = turns
-        .slice(
-          0,
-          turns.findIndex((turn) => turn.id === turnId),
-        )
-        .reverse()
-        .find((turn) => turn.role === "user");
-
-      if (previous?.role === "user") {
-        void respond(previous.text);
-      }
-    },
     setAttachment,
     setValue,
     startEdit: (turn: UserTurn) => {

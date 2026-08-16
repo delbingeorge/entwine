@@ -22,5 +22,5 @@ export const formatPeriod = (startDate: string | undefined, endDate: string | un
     return end;
   }
 
-  return `${start} — ${end === "" ? "Present" : end}`;
+  return `${start} to ${end === "" ? "Present" : end}`;
 };

@@ -6,6 +6,7 @@ import { UserCircleIcon } from "@solar-icons/react/linear/user-circle";
 import { useNavigate } from "@tanstack/react-router";
 
 import { BrandMark } from "@/shared/components/brand-mark";
+import { LucideIcon } from "@/shared/components/lucide-icon";
 import { usePressMenu } from "@/shared/hooks/use-press-menu";
 import { coachingTabs, type CoachingTab } from "@/shared/lib/coaching-tabs";
 import { settingsTabs, type SettingsTab } from "@/shared/lib/settings-tabs";
@@ -21,6 +22,7 @@ import type { JobStatus } from "../types";
 interface ChatHeaderProps {
   currentThreadId: string | null;
   onDeleteThread: (id: string) => void;
+  onLeaveSession: () => void;
   onNewThread: () => void;
   onOpenJob: (id: string) => void;
   onSelectThread: (id: string) => void;
@@ -32,6 +34,7 @@ interface ChatHeaderProps {
 export const ChatHeader = ({
   currentThreadId,
   onDeleteThread,
+  onLeaveSession,
   onNewThread,
   onOpenJob,
   onSelectThread,
@@ -40,6 +43,7 @@ export const ChatHeader = ({
   threads,
 }: ChatHeaderProps) => {
   const navigate = useNavigate();
+  const current = threads.find((thread) => thread.id === currentThreadId);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const openSettings = (tab: SettingsTab) => {
     void navigate({ search: { tab }, to: "/settings" });
@@ -59,8 +63,22 @@ export const ChatHeader = ({
 
   return (
     <>
-      <header className="flex h-14 shrink-0 items-center justify-between px-8">
-        <BrandMark />
+      <header className="flex h-14 shrink-0 items-center justify-between gap-4 px-8">
+        {current?.kind === "coaching" ? (
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              className="-ml-2 flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[12.5px] text-composer-soft hover:bg-composer-track hover:text-composer-ink"
+              onClick={onLeaveSession}
+              type="button"
+            >
+              <LucideIcon className="size-3.5 shrink-0" name="chevron-left" />
+              Back to chat
+            </button>
+            <span className="min-w-0 truncate text-[13px] text-composer-ink">{current.title}</span>
+          </div>
+        ) : (
+          <BrandMark />
+        )}
         <div className="flex items-center gap-1.5">
           <button
             aria-label="History"

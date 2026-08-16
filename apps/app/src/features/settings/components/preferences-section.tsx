@@ -26,7 +26,7 @@ const Row = ({ label, value }: { label: string; value: string }) => (
   <div className="flex items-baseline justify-between gap-4 border-b border-composer-line py-2.5 last:border-b-0">
     <span className="shrink-0 text-[11px] tracking-widest text-composer-placeholder">{label}</span>
     <span className="min-w-0 text-right text-[13px] text-composer-ink">
-      {value === "" ? "—" : value}
+      {value === "" ? "Not set" : value}
     </span>
   </div>
 );
@@ -48,8 +48,8 @@ export const PreferencesSection = ({ profile }: PreferencesSectionProps) => (
     ) : (
       <div className="flex flex-col gap-4">
         <p className="text-[12.5px] leading-relaxed text-composer-soft">
-          Ellie searches against these. You can change them whenever you like — updating them
-          changes what she looks for next.
+          Ellie searches against these. You can change them whenever you like. Updating them changes
+          what she looks for next.
         </p>
 
         <div className="flex flex-col">

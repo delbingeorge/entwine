@@ -8,7 +8,7 @@ import type { ThreadSummary } from "@/shared/lib/thread-api";
 
 import { useDialogTransition } from "../hooks/use-dialog-transition";
 
-import { HistoryRow } from "./history-row";
+import { HistoryGroup } from "./history-group";
 import { JobStatusChip } from "./job-status-chip";
 
 import type { Job, JobStatus } from "../types";
@@ -65,13 +65,16 @@ export const HistoryDialog = ({
   const hits = threads.filter(
     (thread) => needle === "" || thread.title.toLowerCase().includes(needle),
   );
+  const chats = hits.filter((thread) => thread.kind !== "coaching");
+  const sessions = hits.filter((thread) => thread.kind === "coaching");
+  const ordered = [...chats, ...sessions];
 
-  const options = hits.length + 1;
+  const options = ordered.length + 1;
   const safeIndex = activeIndex >= options ? 0 : activeIndex;
-  const isNewActive = safeIndex === hits.length;
+  const isNewActive = safeIndex === ordered.length;
 
   const choose = (index: number) => {
-    const thread = hits[index];
+    const thread = ordered[index];
 
     if (thread === undefined) {
       onNew();
@@ -139,35 +142,32 @@ export const HistoryDialog = ({
         </label>
 
         <div className="overflow-y-auto py-1" id="history-options" role="listbox">
-          <div>
-            <p className="px-4 pt-2.5 pb-1 text-[10px] tracking-widest text-composer-placeholder">
-              CHATS
-            </p>
-            {hits.length === 0 ? (
-              <p className="px-4 py-3 text-[12.5px] text-composer-placeholder">
-                No chats match that search.
-              </p>
-            ) : (
-              hits.map((thread, index) => (
-                <HistoryRow
-                  id={rowId(index)}
-                  isActive={index === safeIndex}
-                  isCurrent={thread.id === currentId}
-                  key={thread.id}
-                  onDelete={() => {
-                    onDelete(thread.id);
-                  }}
-                  onHover={() => {
-                    setActiveIndex(index);
-                  }}
-                  onSelect={() => {
-                    onSelect(thread.id);
-                  }}
-                  thread={thread}
-                />
-              ))
-            )}
-          </div>
+          <HistoryGroup
+            activeIndex={safeIndex}
+            currentId={currentId}
+            emptyLabel="No chats match that search."
+            label="CHATS"
+            offset={0}
+            onDelete={onDelete}
+            onHover={setActiveIndex}
+            onSelect={onSelect}
+            rowId={rowId}
+            threads={chats}
+          />
+
+          {sessions.length === 0 ? null : (
+            <HistoryGroup
+              activeIndex={safeIndex}
+              currentId={currentId}
+              label="COACHING"
+              offset={chats.length}
+              onDelete={onDelete}
+              onHover={setActiveIndex}
+              onSelect={onSelect}
+              rowId={rowId}
+              threads={sessions}
+            />
+          )}
 
           {jobs.length === 0 ? null : (
             <div>
@@ -206,9 +206,9 @@ export const HistoryDialog = ({
             <div
               aria-selected={isNewActive}
               className={`group flex w-full items-center pr-2 ${isNewActive ? "bg-composer-track" : ""}`}
-              id={rowId(hits.length)}
+              id={rowId(ordered.length)}
               onMouseMove={() => {
-                setActiveIndex(hits.length);
+                setActiveIndex(ordered.length);
               }}
               role="option"
             >

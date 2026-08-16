@@ -21,7 +21,7 @@ export const CoachingScreen = () => {
     setIsBusy(true);
     setFailure(null);
 
-    createThread({ kind: "coaching", title: scenario.title })
+    createThread({ kind: "coaching", scenario: scenario.id, title: scenario.title })
       .then(async (thread) => {
         await navigate({ search: { thread: thread.id }, to: "/" });
       })

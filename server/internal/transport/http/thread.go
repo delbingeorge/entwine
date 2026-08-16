@@ -27,8 +27,9 @@ type messageResponse struct {
 }
 
 type newThreadRequest struct {
-	Kind  string `json:"kind"`
-	Title string `json:"title"`
+	Kind     string `json:"kind"`
+	Scenario string `json:"scenario"`
+	Title    string `json:"title"`
 }
 
 func handleCreateThread(logger *slog.Logger, chats ChatService) http.HandlerFunc {
@@ -54,7 +55,7 @@ func handleCreateThread(logger *slog.Logger, chats ChatService) http.HandlerFunc
 		}
 
 		thread, err := chats.StartThread(
-			ctx, current.user.ID, domain.ThreadKind(request.Kind), request.Title)
+			ctx, current.user.ID, domain.ThreadKind(request.Kind), request.Title, request.Scenario)
 		if err != nil {
 			if errors.Is(err, domain.ErrInvalidProfile) {
 				writeError(ctx, logger, w, http.StatusBadRequest, "invalid_thread", "unknown chat kind")

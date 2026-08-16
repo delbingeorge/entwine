@@ -22,7 +22,7 @@ export const scenariosByTab: Record<CoachingTab, Scenario[]> = {
     {
       id: "equity",
       title: "Negotiate equity in your offer",
-      subtitle: "RSUs, options, vesting — get the equity right.",
+      subtitle: "RSUs, options, vesting. Get the equity right.",
     },
     {
       id: "salary",
@@ -33,8 +33,8 @@ export const scenariosByTab: Record<CoachingTab, Scenario[]> = {
   "Interview practice": [
     {
       id: "from-post",
-      title: "Mock interview from a job post",
-      subtitle: "Paste a job post URL and Ellie tailors the interview to that exact role.",
+      title: "Mock interview from a job description",
+      subtitle: "Paste the job description and Ellie tailors the interview to that exact role.",
       isTailored: true,
     },
     {
@@ -50,7 +50,7 @@ export const scenariosByTab: Record<CoachingTab, Scenario[]> = {
     {
       id: "hiring-manager",
       title: "Practise the hiring manager screen",
-      subtitle: "Second-round style — deeper than the recruiter call.",
+      subtitle: "Second-round style, deeper than the recruiter call.",
     },
     {
       id: "mock",
@@ -62,7 +62,7 @@ export const scenariosByTab: Record<CoachingTab, Scenario[]> = {
     {
       id: "custom",
       title: "Create your own",
-      subtitle: "Set up a custom session — your goal, your script.",
+      subtitle: "Set up a custom session with your goal and your script.",
     },
   ],
 };

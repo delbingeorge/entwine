@@ -74,6 +74,23 @@ export const useThreads = (requestedId: string) => {
           console.error("could not delete that chat", cause);
         });
     },
+    leaveSession: () => {
+      const chat = threads.find((thread) => thread.kind !== "coaching");
+
+      if (chat !== undefined) {
+        setCurrentId(chat.id);
+        return;
+      }
+
+      createThread()
+        .then(async (created) => {
+          setCurrentId(created.id);
+          await refresh();
+        })
+        .catch((cause: unknown) => {
+          console.error("could not open your chat", cause);
+        });
+    },
     select: setCurrentId,
     startNew: () => {
       createThread()

@@ -11,19 +11,12 @@ import type { JobStatus, Turn } from "../types";
 
 interface TranscriptProps {
   onOpenJob?: (id: string) => void;
-  onRetry: (id: number) => void;
   onStartEdit: (turn: Extract<Turn, { role: "user" }>) => void;
   statusOf?: (id: string) => JobStatus;
   turns: Turn[];
 }
 
-export const Transcript = ({
-  onOpenJob,
-  onRetry,
-  onStartEdit,
-  statusOf,
-  turns,
-}: TranscriptProps) => {
+export const Transcript = ({ onOpenJob, onStartEdit, statusOf, turns }: TranscriptProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,12 +50,7 @@ export const Transcript = ({
 
             return (
               <div className="flex flex-col gap-3" key={turn.id}>
-                <AgentTurnRow
-                  onRetry={() => {
-                    onRetry(turn.id);
-                  }}
-                  turn={turn}
-                />
+                <AgentTurnRow turn={turn} />
                 {turn.jobIds === undefined || turn.isStreaming ? null : (
                   <div className="flex flex-col gap-2 pl-7">
                     {turn.jobIds.map((id) => {

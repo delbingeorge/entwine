@@ -25,6 +25,7 @@ export const ChatScreen = () => {
       <ChatHeader
         currentThreadId={history.currentId}
         onDeleteThread={history.remove}
+        onLeaveSession={history.leaveSession}
         onNewThread={history.startNew}
         onOpenJob={threads.open}
         onSelectThread={history.select}
@@ -37,7 +38,6 @@ export const ChatScreen = () => {
         <div className="grid min-h-0 flex-1 px-8 pb-4" style={{ gridTemplateRows: "1fr auto" }}>
           <Transcript
             onOpenJob={threads.open}
-            onRetry={chat.retry}
             onStartEdit={chat.startEdit}
             statusOf={threads.statusOf}
             turns={chat.turns}

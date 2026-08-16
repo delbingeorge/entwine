@@ -66,7 +66,7 @@ func (f *fakeDetails) ImportResume(
 type fakeChats struct{}
 
 func (f *fakeChats) StartThread(
-	_ context.Context, _ string, _ domain.ThreadKind, _ string,
+	_ context.Context, _ string, _ domain.ThreadKind, _, _ string,
 ) (domain.Thread, error) {
 	return domain.Thread{}, nil
 }

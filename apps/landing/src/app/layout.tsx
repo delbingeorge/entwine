@@ -7,7 +7,8 @@ import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: "Entwine",
-  description: "An agent that finds you tech roles across India and SEA — salary shown upfront.",
+  description:
+    "An agent that finds you tech roles across India and SEA, with salary shown upfront.",
 };
 
 const RootLayout = ({ children }: { children: ReactNode }) => (
