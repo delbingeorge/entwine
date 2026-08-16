@@ -2,9 +2,24 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/shared/lib/cn";
 
-import authPlate from "@/assets/auth-plate.svg";
-
 import { BrandMark } from "./brand-mark";
+import { MorphSlider } from "./morph-slider";
+import { PlateCredit } from "./plate-credit";
+
+import type { PlatePhotographer } from "./plate-credit";
+
+const unsplash = (id: string) =>
+  `https://images.unsplash.com/${id}?q=80&w=1600&auto=format&fit=crop`;
+
+const plateSlides = [
+  { image: unsplash("photo-1549472579-e133f59d8b23") },
+  { image: unsplash("photo-1470071459604-3b5ec3a7fe05") },
+  { image: unsplash("photo-1501854140801-50d01698950b") },
+  { image: unsplash("photo-1426604966848-d7adac402bff") },
+  { image: unsplash("photo-1517411032315-54ef2cb783bb") },
+];
+
+const platePhotographers: PlatePhotographer[] = [];
 
 interface SplitLayoutProps {
   children: ReactNode;
@@ -23,8 +38,21 @@ export const SplitLayout = ({ children, headerAside, wide = false }: SplitLayout
         <div className={cn("w-full", !wide && "max-w-md")}>{children}</div>
       </main>
     </div>
-    <section className="hidden h-full lg:block">
-      <img alt="" className="size-full object-cover" src={authPlate} />
+    <section className="group relative hidden h-full lg:block">
+      <MorphSlider
+        autoplay
+        autoplayDelay={5}
+        drift={0.4}
+        duration={1.4}
+        intensity={0.3}
+        items={plateSlides}
+        radius={0}
+        showCaptions={false}
+        showControls={false}
+        showIndicators={false}
+        transition="melt"
+      />
+      <PlateCredit photographers={platePhotographers} />
     </section>
   </div>
 );
