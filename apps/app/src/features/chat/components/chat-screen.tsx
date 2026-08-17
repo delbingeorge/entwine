@@ -86,6 +86,7 @@ export const ChatScreen = () => {
   };
   const threads = useJobThreads();
   const isEmpty = chat.turns.length === 0;
+  const showIntro = isEmpty && !chat.isLoading;
   const flipState = useRef<Flip.FlipState | null>(null);
 
   useLayoutEffect(() => {
@@ -189,7 +190,7 @@ export const ChatScreen = () => {
       />
 
       {threads.openJob === undefined ? (
-        isEmpty ? (
+        showIntro ? (
           <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-8 pb-16">
             <div className="flex w-full max-w-2xl flex-col">
               <ThreadIntro {...introCopy(canCall, name, current?.title ?? "")} />

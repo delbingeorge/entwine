@@ -35,29 +35,58 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 
 		current, ok := callerFromContext(ctx)
 		if !ok {
-			writeError(ctx, logger, w, http.StatusUnauthorized, "unauthorized", "no caller")
+			writeError(
+				ctx,
+				logger,
+				w,
+				http.StatusUnauthorized,
+				"unauthorized",
+				"no caller",
+			)
 			return
 		}
 
-		decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxChatBody))
+		decoder := json.NewDecoder(
+			http.MaxBytesReader(w, r.Body, maxChatBody),
+		)
 		decoder.DisallowUnknownFields()
 
 		var request chatRequest
 		if err := decoder.Decode(&request); err != nil {
 			logger.WarnContext(ctx, "chat body rejected", slog.Any("error", err))
-			writeError(ctx, logger, w, http.StatusBadRequest, "invalid_body", "could not read that")
-
+			writeError(
+				ctx,
+				logger,
+				w,
+				http.StatusBadRequest,
+				"invalid_body",
+				"could not read that",
+			)
 			return
 		}
 
 		if request.ThreadID == "" || strings.TrimSpace(request.Text) == "" {
-			writeError(ctx, logger, w, http.StatusBadRequest, "invalid_body", "thread and text are required")
+			writeError(
+				ctx,
+				logger,
+				w,
+				http.StatusBadRequest,
+				"invalid_body",
+				"thread and text are required",
+			)
 			return
 		}
 
 		flusher, canFlush := w.(http.Flusher)
 		if !canFlush {
-			writeError(ctx, logger, w, http.StatusInternalServerError, "internal", "cannot stream")
+			writeError(
+				ctx,
+				logger,
+				w,
+				http.StatusInternalServerError,
+				"internal",
+				"cannot stream",
+			)
 			return
 		}
 
@@ -69,30 +98,38 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 		flusher.Flush()
 
 		emit := func(token string) error {
-			payload, err := json.Marshal(map[string]string{"text": token})
+			payload, err := json.Marshal(map[string]string{
+				"text": token,
+			})
 			if err != nil {
 				return err
 			}
 
-			if _, err := w.Write([]byte("data: " + string(payload) + "\n\n")); err != nil {
+			if _, err := w.Write(
+				[]byte("data: " + string(payload) + "\n\n"),
+			); err != nil {
 				return err
 			}
 
 			flusher.Flush()
-
 			return nil
 		}
 
-		if err := chats.Reply(ctx, current.user.ID, request.ThreadID, request.Text, emit); err != nil {
+		if err := chats.Reply(
+			ctx,
+			current.user.ID,
+			request.ThreadID,
+			request.Text,
+			emit,
+		); err != nil {
 			logger.ErrorContext(ctx, "chat reply", slog.Any("error", err))
 
 			message := "Ellie could not answer just now."
 			if errors.Is(err, chat.ErrQuota) {
-        message = "Ellie is off shift. Check back later."
+				message = "Ellie is off shift. Check back later."
 			}
 
 			writeStreamError(w, flusher, message)
-
 			return
 		}
 
@@ -102,11 +139,15 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 }
 
 func writeStreamError(w http.ResponseWriter, flusher http.Flusher, message string) {
-	payload, err := json.Marshal(map[string]string{"message": message})
+	payload, err := json.Marshal(map[string]string{
+		"message": message,
+	})
 	if err != nil {
 		return
 	}
 
-	_, _ = w.Write([]byte("event: error\ndata: " + string(payload) + "\n\n"))
+	_, _ = w.Write(
+		[]byte("event: error\ndata: " + string(payload) + "\n\n"),
+	)
 	flusher.Flush()
 }

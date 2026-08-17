@@ -12,7 +12,9 @@ import {
 export const useThreads = (requestedId: string) => {
   const navigate = useNavigate();
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
-  const isResolving = useRef(false);
+  const resolvingFor = useRef<string | null>(null);
+  const latestRequest = useRef(requestedId);
+  latestRequest.current = requestedId;
 
   const open = useCallback(
     (id: string, replace = false) => {
@@ -48,14 +50,18 @@ export const useThreads = (requestedId: string) => {
   const isKnown = threads.some((thread) => thread.id === requestedId);
 
   useEffect(() => {
-    if (isKnown || isResolving.current) {
+    if (isKnown || resolvingFor.current === requestedId) {
       return;
     }
 
-    isResolving.current = true;
+    resolvingFor.current = requestedId;
 
     refresh()
       .then(async (listed) => {
+        if (latestRequest.current !== requestedId) {
+          return;
+        }
+
         if (!listed.some((thread) => thread.id === requestedId)) {
           await openNewest(listed);
         }
@@ -64,15 +70,17 @@ export const useThreads = (requestedId: string) => {
         console.error("could not load your chats", cause);
       })
       .finally(() => {
-        isResolving.current = false;
+        if (resolvingFor.current === requestedId) {
+          resolvingFor.current = null;
+        }
       });
   }, [isKnown, openNewest, refresh, requestedId]);
 
   const openFresh = () => {
     createThread()
       .then(async (created) => {
-        open(created.id);
         await refresh();
+        open(created.id);
       })
       .catch((cause: unknown) => {
         console.error("could not start a new chat", cause);

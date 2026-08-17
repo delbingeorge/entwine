@@ -23,6 +23,7 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [value, setValue] = useState("");
   const [busyThreads, setBusyThreads] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [editing, setEditing] = useState<number | null>(null);
   const nextId = useRef(1000);
   const running = useRef(new Map<string, Running>());
@@ -50,6 +51,9 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
     const opened = openedAt.current;
     const isAwaited = running.current.has(threadId);
 
+    setIsLoading(true);
+    setTurns(isAwaited ? [{ id: nextId.current++, role: "thinking" }] : []);
+
     loadTurns(threadId)
       .then((stored) => {
         if (openedAt.current !== opened) {
@@ -65,6 +69,11 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
       })
       .catch((cause: unknown) => {
         console.error("could not load this chat", cause);
+      })
+      .finally(() => {
+        if (openedAt.current === opened) {
+          setIsLoading(false);
+        }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threadId]);
@@ -223,6 +232,7 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
     },
     isBusy,
     isEditing: editing !== null,
+    isLoading,
     setAttachment,
     setValue,
     startEdit: (turn: UserTurn) => {
