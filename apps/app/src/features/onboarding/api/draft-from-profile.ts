@@ -1,3 +1,4 @@
+import { defaultCurrency } from "@/shared/lib/currencies";
 import type { Profile } from "@/shared/lib/profile-api";
 
 import { emptyDraft, type ProfileDraft } from "../types";
@@ -18,9 +19,8 @@ export const draftFromProfile = (profile: Profile | null): ProfileDraft => {
 
   return {
     seniority: label === undefined ? [] : [label],
-    stack: profile.primaryStack,
     locations: profile.locations,
+    salaryCurrency: profile.salaryCurrency === "" ? defaultCurrency : profile.salaryCurrency,
     salaryMin: profile.salaryMin === 0 ? "" : String(profile.salaryMin),
-    wantsToBuild: profile.wantsToBuild,
   };
 };

@@ -34,24 +34,18 @@ func (s *Service) Get(ctx context.Context, userID string) (domain.CandidateProfi
 type SaveInput struct {
 	UserID         string
 	Seniority      domain.Seniority
-	PrimaryStack   []string
 	Locations      []string
-	RemotePref     domain.RemotePref
 	SalaryMin      int64
 	SalaryCurrency string
-	WantsToBuild   string
 }
 
 func (s *Service) Save(ctx context.Context, input SaveInput) (domain.CandidateProfile, error) {
 	profile, err := domain.NewCandidateProfile(domain.NewCandidateProfileParams{
 		UserID:         input.UserID,
 		Seniority:      input.Seniority,
-		PrimaryStack:   input.PrimaryStack,
 		Locations:      input.Locations,
-		RemotePref:     input.RemotePref,
 		SalaryMin:      input.SalaryMin,
 		SalaryCurrency: input.SalaryCurrency,
-		WantsToBuild:   input.WantsToBuild,
 		Status:         domain.ProfileStatusActive,
 	})
 	if err != nil {

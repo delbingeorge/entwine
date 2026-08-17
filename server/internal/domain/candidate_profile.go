@@ -14,15 +14,6 @@ const (
 	SeniorityStaff  Seniority = "staff"
 )
 
-type RemotePref string
-
-const (
-	RemotePrefRemote RemotePref = "remote"
-	RemotePrefHybrid RemotePref = "hybrid"
-	RemotePrefOnsite RemotePref = "onsite"
-	RemotePrefAny    RemotePref = "any"
-)
-
 type ProfileStatus string
 
 const (
@@ -34,12 +25,9 @@ type CandidateProfile struct {
 	ID             string
 	UserID         string
 	Seniority      Seniority
-	PrimaryStack   []string
 	Locations      []string
-	RemotePref     RemotePref
 	SalaryMin      int64
 	SalaryCurrency string
-	WantsToBuild   string
 	Status         ProfileStatus
 }
 
@@ -47,12 +35,9 @@ type NewCandidateProfileParams struct {
 	ID             string
 	UserID         string
 	Seniority      Seniority
-	PrimaryStack   []string
 	Locations      []string
-	RemotePref     RemotePref
 	SalaryMin      int64
 	SalaryCurrency string
-	WantsToBuild   string
 	Status         ProfileStatus
 }
 
@@ -64,11 +49,6 @@ func NewCandidateProfile(params NewCandidateProfileParams) (CandidateProfile, er
 	if !params.Seniority.isKnown() {
 		return CandidateProfile{}, fmt.Errorf(
 			"seniority %q is unknown: %w", params.Seniority, ErrInvalidProfile)
-	}
-
-	if !params.RemotePref.isKnown() {
-		return CandidateProfile{}, fmt.Errorf(
-			"remote preference %q is unknown: %w", params.RemotePref, ErrInvalidProfile)
 	}
 
 	if params.SalaryMin < 0 {
@@ -85,21 +65,18 @@ func NewCandidateProfile(params NewCandidateProfileParams) (CandidateProfile, er
 		return CandidateProfile{}, fmt.Errorf("status %q is unknown: %w", status, ErrInvalidProfile)
 	}
 
-	if status == ProfileStatusActive && len(params.PrimaryStack) == 0 {
+	if status == ProfileStatusActive && len(params.Locations) == 0 {
 		return CandidateProfile{}, fmt.Errorf(
-			"an active profile needs a stack: %w", ErrInvalidProfile)
+			"an active profile needs at least one location: %w", ErrInvalidProfile)
 	}
 
 	return CandidateProfile{
 		ID:             params.ID,
 		UserID:         params.UserID,
 		Seniority:      params.Seniority,
-		PrimaryStack:   params.PrimaryStack,
 		Locations:      params.Locations,
-		RemotePref:     params.RemotePref,
 		SalaryMin:      params.SalaryMin,
 		SalaryCurrency: params.SalaryCurrency,
-		WantsToBuild:   params.WantsToBuild,
 		Status:         status,
 	}, nil
 }
@@ -107,15 +84,6 @@ func NewCandidateProfile(params NewCandidateProfileParams) (CandidateProfile, er
 func (s Seniority) isKnown() bool {
 	switch s {
 	case SeniorityJunior, SeniorityMid, SenioritySenior, SeniorityStaff:
-		return true
-	default:
-		return false
-	}
-}
-
-func (r RemotePref) isKnown() bool {
-	switch r {
-	case RemotePrefRemote, RemotePrefHybrid, RemotePrefOnsite, RemotePrefAny:
 		return true
 	default:
 		return false

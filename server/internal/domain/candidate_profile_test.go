@@ -11,9 +11,7 @@ func validParams() domain.NewCandidateProfileParams {
 	return domain.NewCandidateProfileParams{
 		UserID:         "11111111-1111-1111-1111-111111111111",
 		Seniority:      domain.SenioritySenior,
-		PrimaryStack:   []string{"Go", "PostgreSQL"},
 		Locations:      []string{"Bengaluru"},
-		RemotePref:     domain.RemotePrefRemote,
 		SalaryMin:      2_500_000,
 		SalaryCurrency: "INR",
 		Status:         domain.ProfileStatusActive,
@@ -38,11 +36,6 @@ func TestNewCandidateProfile(t *testing.T) {
 			wantErr: domain.ErrInvalidProfile,
 		},
 		{
-			name:    "rejects an unknown remote preference",
-			mutate:  func(p *domain.NewCandidateProfileParams) { p.RemotePref = "sometimes" },
-			wantErr: domain.ErrInvalidProfile,
-		},
-		{
 			name:    "rejects a negative salary floor",
 			mutate:  func(p *domain.NewCandidateProfileParams) { p.SalaryMin = -1 },
 			wantErr: domain.ErrInvalidProfile,
@@ -53,16 +46,16 @@ func TestNewCandidateProfile(t *testing.T) {
 			wantErr: domain.ErrInvalidProfile,
 		},
 		{
-			name: "rejects an active profile with no stack",
+			name: "rejects an active profile with no location",
 			mutate: func(p *domain.NewCandidateProfileParams) {
-				p.PrimaryStack = nil
+				p.Locations = nil
 			},
 			wantErr: domain.ErrInvalidProfile,
 		},
 		{
-			name: "allows a draft with no stack",
+			name: "allows a draft with no location",
 			mutate: func(p *domain.NewCandidateProfileParams) {
-				p.PrimaryStack = nil
+				p.Locations = nil
 				p.Status = domain.ProfileStatusDraft
 			},
 		},

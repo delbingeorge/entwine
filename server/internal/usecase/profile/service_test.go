@@ -45,9 +45,7 @@ func validInput() profile.SaveInput {
 	return profile.SaveInput{
 		UserID:         "11111111-1111-1111-1111-111111111111",
 		Seniority:      domain.SenioritySenior,
-		PrimaryStack:   []string{"Go"},
 		Locations:      []string{"Bengaluru"},
-		RemotePref:     domain.RemotePrefRemote,
 		SalaryMin:      2_500_000,
 		SalaryCurrency: "INR",
 	}
@@ -69,8 +67,8 @@ func TestSave(t *testing.T) {
 			wantErr: domain.ErrInvalidProfile,
 		},
 		{
-			name:    "rejects an empty stack",
-			mutate:  func(in *profile.SaveInput) { in.PrimaryStack = nil },
+			name:    "rejects an empty location list",
+			mutate:  func(in *profile.SaveInput) { in.Locations = nil },
 			wantErr: domain.ErrInvalidProfile,
 		},
 		{

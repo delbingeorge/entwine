@@ -39,12 +39,11 @@ func (f *fakeProfiles) Save(
 	f.saved = append(f.saved, input)
 
 	return domain.CandidateProfile{
-		UserID:       input.UserID,
-		Seniority:    input.Seniority,
-		PrimaryStack: input.PrimaryStack,
-		RemotePref:   input.RemotePref,
-		SalaryMin:    input.SalaryMin,
-		Status:       domain.ProfileStatusActive,
+		UserID:    input.UserID,
+		Seniority: input.Seniority,
+		Locations: input.Locations,
+		SalaryMin: input.SalaryMin,
+		Status:    domain.ProfileStatusActive,
 	}, nil
 }
 
@@ -94,8 +93,8 @@ func TestPutProfileSaves(t *testing.T) {
 	profiles := &fakeProfiles{}
 	router := newProfileRouter(profiles)
 
-	body := `{"seniority":"senior","primaryStack":["Go"],"locations":["Bengaluru"],
-		"remotePref":"remote","salaryMin":2500000,"salaryCurrency":"INR","wantsToBuild":"systems"}`
+	body := `{"seniority":"senior","locations":["Bengaluru"],
+		"salaryMin":2500000,"salaryCurrency":"INR"}`
 
 	recorder := httptest.NewRecorder()
 	router.ServeHTTP(recorder, signedInRequest(http.MethodPut, "/v1/profile", body))

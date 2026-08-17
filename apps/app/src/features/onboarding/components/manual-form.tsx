@@ -1,6 +1,6 @@
 import { useDisplayName } from "@/shared/hooks/use-display-name";
 
-import { locationOptions, seniorityOptions, stackOptions, totalManualSteps } from "../questions";
+import { locationOptions, seniorityOptions, totalManualSteps } from "../questions";
 
 import { ChipGroup } from "./chip-group";
 import { SalaryField } from "./salary-field";
@@ -73,26 +73,6 @@ export const ManualForm = ({
     return (
       <StepShell
         {...shell}
-        canContinue={draft.stack.length > 0}
-        subtitle="Pick everything you would happily work in."
-        title="What do you build with?"
-      >
-        <ChipGroup
-          mode="multi"
-          onChange={(stack) => {
-            patch({ stack });
-          }}
-          options={stackOptions}
-          values={draft.stack}
-        />
-      </StepShell>
-    );
-  }
-
-  if (step === 3) {
-    return (
-      <StepShell
-        {...shell}
         canContinue={draft.locations.length > 0}
         subtitle="Pick as many as you are open to."
         title="Where do you want to work?"
@@ -109,41 +89,24 @@ export const ManualForm = ({
     );
   }
 
-  if (step === 4) {
-    return (
-      <StepShell
-        {...shell}
-        canContinue={draft.salaryMin.length > 0}
-        subtitle="We only show you roles that clear it."
-        title="What is your salary floor?"
-      >
-        <SalaryField
-          onValueChange={(salaryMin) => {
-            patch({ salaryMin });
-          }}
-          value={draft.salaryMin}
-        />
-      </StepShell>
-    );
-  }
-
   return (
     <StepShell
       {...shell}
-      canContinue={!isSaving}
+      canContinue={draft.salaryMin.length > 0 && !isSaving}
       continueLabel={isSaving ? "Saving…" : "Finish"}
       error={hasFailed ? "We could not save that. Try again." : undefined}
-      subtitle="One line is plenty. It sharpens every match."
-      title="What do you want to work on next?"
+      subtitle="We only show you roles that clear it."
+      title="What is your salary floor?"
     >
-      <textarea
-        className="w-full resize-none rounded-lg border border-border bg-surface-raised px-4 py-3 text-ink outline-none placeholder:text-ink-muted focus:border-ink"
-        onChange={(event) => {
-          patch({ wantsToBuild: event.target.value });
+      <SalaryField
+        currency={draft.salaryCurrency}
+        onCurrencyChange={(salaryCurrency) => {
+          patch({ salaryCurrency });
         }}
-        placeholder="Systems where correctness matters, ideally with a small team."
-        rows={3}
-        value={draft.wantsToBuild}
+        onValueChange={(salaryMin) => {
+          patch({ salaryMin });
+        }}
+        value={draft.salaryMin}
       />
     </StepShell>
   );

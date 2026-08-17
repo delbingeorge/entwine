@@ -67,12 +67,9 @@ func TestCandidateProfileSaveAndRead(t *testing.T) {
 	profile, err := domain.NewCandidateProfile(domain.NewCandidateProfileParams{
 		UserID:         userID,
 		Seniority:      domain.SenioritySenior,
-		PrimaryStack:   []string{"Go", "PostgreSQL"},
 		Locations:      []string{"Bengaluru", "Anywhere remote"},
-		RemotePref:     domain.RemotePrefRemote,
 		SalaryMin:      2_500_000,
 		SalaryCurrency: "INR",
-		WantsToBuild:   "Systems where correctness matters",
 		Status:         domain.ProfileStatusActive,
 	})
 	if err != nil {
@@ -88,12 +85,8 @@ func TestCandidateProfileSaveAndRead(t *testing.T) {
 		t.Fatalf("read back: %v", err)
 	}
 
-	if len(stored.PrimaryStack) != 2 || stored.PrimaryStack[0] != "Go" {
-		t.Errorf("got stack %v, want the saved text[] round-tripped", stored.PrimaryStack)
-	}
-
-	if len(stored.Locations) != 2 {
-		t.Errorf("got locations %v, want two entries", stored.Locations)
+	if len(stored.Locations) != 2 || stored.Locations[0] != "Bengaluru" {
+		t.Errorf("got locations %v, want the saved text[] round-tripped", stored.Locations)
 	}
 
 	if stored.SalaryMin != 2_500_000 {
@@ -111,13 +104,12 @@ func TestCandidateProfileSaveIsIdempotentPerUser(t *testing.T) {
 	ctx := context.Background()
 	now := time.Date(2026, time.August, 15, 9, 0, 0, 0, time.UTC)
 
-	build := func(stack []string) domain.CandidateProfile {
+	build := func(locations []string) domain.CandidateProfile {
 		profile, err := domain.NewCandidateProfile(domain.NewCandidateProfileParams{
-			UserID:       userID,
-			Seniority:    domain.SeniorityMid,
-			PrimaryStack: stack,
-			RemotePref:   domain.RemotePrefAny,
-			Status:       domain.ProfileStatusActive,
+			UserID:    userID,
+			Seniority: domain.SeniorityMid,
+			Locations: locations,
+			Status:    domain.ProfileStatusActive,
 		})
 		if err != nil {
 			t.Fatalf("build profile: %v", err)
@@ -126,11 +118,11 @@ func TestCandidateProfileSaveIsIdempotentPerUser(t *testing.T) {
 		return profile
 	}
 
-	if _, err := repo.Save(ctx, build([]string{"Go"}), now); err != nil {
+	if _, err := repo.Save(ctx, build([]string{"Bengaluru"}), now); err != nil {
 		t.Fatalf("first save: %v", err)
 	}
 
-	if _, err := repo.Save(ctx, build([]string{"TypeScript", "React"}), now); err != nil {
+	if _, err := repo.Save(ctx, build([]string{"Pune", "Mumbai"}), now); err != nil {
 		t.Fatalf("second save: %v", err)
 	}
 
@@ -146,7 +138,7 @@ func TestCandidateProfileSaveIsIdempotentPerUser(t *testing.T) {
 		t.Fatalf("read back: %v", err)
 	}
 
-	if len(stored.PrimaryStack) != 2 {
-		t.Errorf("got stack %v, want the second save to win", stored.PrimaryStack)
+	if len(stored.Locations) != 2 {
+		t.Errorf("got locations %v, want the second save to win", stored.Locations)
 	}
 }

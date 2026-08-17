@@ -18,23 +18,17 @@ type ProfileService interface {
 
 type profileResponse struct {
 	Seniority      string   `json:"seniority"`
-	PrimaryStack   []string `json:"primaryStack"`
 	Locations      []string `json:"locations"`
-	RemotePref     string   `json:"remotePref"`
 	SalaryMin      int64    `json:"salaryMin"`
 	SalaryCurrency string   `json:"salaryCurrency"`
-	WantsToBuild   string   `json:"wantsToBuild"`
 	Status         string   `json:"status"`
 }
 
 type profileRequest struct {
 	Seniority      string   `json:"seniority"`
-	PrimaryStack   []string `json:"primaryStack"`
 	Locations      []string `json:"locations"`
-	RemotePref     string   `json:"remotePref"`
 	SalaryMin      int64    `json:"salaryMin"`
 	SalaryCurrency string   `json:"salaryCurrency"`
-	WantsToBuild   string   `json:"wantsToBuild"`
 }
 
 const maxProfileBody = 1 << 16
@@ -42,12 +36,9 @@ const maxProfileBody = 1 << 16
 func toProfileResponse(saved domain.CandidateProfile) profileResponse {
 	return profileResponse{
 		Seniority:      string(saved.Seniority),
-		PrimaryStack:   saved.PrimaryStack,
 		Locations:      saved.Locations,
-		RemotePref:     string(saved.RemotePref),
 		SalaryMin:      saved.SalaryMin,
 		SalaryCurrency: saved.SalaryCurrency,
-		WantsToBuild:   saved.WantsToBuild,
 		Status:         string(saved.Status),
 	}
 }
@@ -101,12 +92,9 @@ func handlePutProfile(logger *slog.Logger, profiles ProfileService) http.Handler
 		saved, err := profiles.Save(ctx, profile.SaveInput{
 			UserID:         current.user.ID,
 			Seniority:      domain.Seniority(body.Seniority),
-			PrimaryStack:   body.PrimaryStack,
 			Locations:      body.Locations,
-			RemotePref:     domain.RemotePref(body.RemotePref),
 			SalaryMin:      body.SalaryMin,
 			SalaryCurrency: body.SalaryCurrency,
-			WantsToBuild:   body.WantsToBuild,
 		})
 		if errors.Is(err, domain.ErrInvalidProfile) {
 			logger.WarnContext(ctx, "rejected profile", slog.Any("error", err))

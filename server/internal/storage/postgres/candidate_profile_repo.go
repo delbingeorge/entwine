@@ -17,12 +17,9 @@ type candidateProfileRow struct {
 	ID             string         `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid()"`
 	UserID         string         `gorm:"column:user_id;type:uuid"`
 	Seniority      string         `gorm:"column:seniority"`
-	PrimaryStack   pq.StringArray `gorm:"column:primary_stack;type:text[]"`
 	Locations      pq.StringArray `gorm:"column:locations;type:text[]"`
-	RemotePref     string         `gorm:"column:remote_pref"`
 	SalaryMin      *int64         `gorm:"column:salary_expectation_min"`
 	SalaryCurrency *string        `gorm:"column:salary_currency"`
-	WantsToBuild   *string        `gorm:"column:wants_to_build"`
 	Status         string         `gorm:"column:status"`
 	UpdatedAt      time.Time      `gorm:"column:updated_at"`
 }
@@ -34,12 +31,9 @@ func (r candidateProfileRow) toDomain() (domain.CandidateProfile, error) {
 		ID:             r.ID,
 		UserID:         r.UserID,
 		Seniority:      domain.Seniority(r.Seniority),
-		PrimaryStack:   r.PrimaryStack,
 		Locations:      r.Locations,
-		RemotePref:     domain.RemotePref(r.RemotePref),
 		SalaryMin:      derefInt64(r.SalaryMin),
 		SalaryCurrency: derefString(r.SalaryCurrency),
-		WantsToBuild:   derefString(r.WantsToBuild),
 		Status:         domain.ProfileStatus(r.Status),
 	})
 }
@@ -48,12 +42,9 @@ func rowFromProfile(profile domain.CandidateProfile, now time.Time) candidatePro
 	return candidateProfileRow{
 		UserID:         profile.UserID,
 		Seniority:      string(profile.Seniority),
-		PrimaryStack:   textArray(profile.PrimaryStack),
 		Locations:      textArray(profile.Locations),
-		RemotePref:     string(profile.RemotePref),
 		SalaryMin:      &profile.SalaryMin,
 		SalaryCurrency: &profile.SalaryCurrency,
-		WantsToBuild:   &profile.WantsToBuild,
 		Status:         string(profile.Status),
 		UpdatedAt:      now,
 	}

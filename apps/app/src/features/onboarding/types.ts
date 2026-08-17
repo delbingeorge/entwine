@@ -1,15 +1,15 @@
+import { defaultCurrency } from "@/shared/lib/currencies";
+
 export interface ProfileDraft {
-  seniority: string[];
-  stack: string[];
   locations: string[];
+  salaryCurrency: string;
   salaryMin: string;
-  wantsToBuild: string;
+  seniority: string[];
 }
 
 export const emptyDraft: ProfileDraft = {
-  seniority: [],
-  stack: [],
   locations: [],
+  salaryCurrency: defaultCurrency,
   salaryMin: "",
-  wantsToBuild: "",
+  seniority: [],
 };

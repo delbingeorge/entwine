@@ -9,16 +9,11 @@ const seniorityByLabel: Record<string, string> = {
   "Staff and above": "staff",
 };
 
-const remoteOnly = "Anywhere remote";
-
 const toPayload = (draft: ProfileDraft) => ({
   seniority: seniorityByLabel[draft.seniority[0] ?? ""] ?? "",
-  primaryStack: draft.stack,
   locations: draft.locations,
-  remotePref: draft.locations.length === 1 && draft.locations[0] === remoteOnly ? "remote" : "any",
   salaryMin: Number(draft.salaryMin),
-  salaryCurrency: "INR",
-  wantsToBuild: draft.wantsToBuild,
+  salaryCurrency: draft.salaryCurrency,
 });
 
 export const saveProfile = (draft: ProfileDraft) => putProfile(toPayload(draft));

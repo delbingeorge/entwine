@@ -4,12 +4,9 @@ import { AppError, apiRequest } from "./api-client";
 
 export const profileSchema = z.object({
   seniority: z.string(),
-  primaryStack: z.array(z.string()),
   locations: z.array(z.string()),
-  remotePref: z.string(),
   salaryMin: z.number(),
   salaryCurrency: z.string(),
-  wantsToBuild: z.string(),
   status: z.string(),
 });
 

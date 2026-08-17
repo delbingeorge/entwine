@@ -204,22 +204,12 @@ func (s *Service) systemPrompt(
 	builder.WriteString("\n\n## This candidate\n")
 	fmt.Fprintf(&builder, "- Seniority: %s\n", profile.Seniority)
 
-	if len(profile.PrimaryStack) > 0 {
-		fmt.Fprintf(&builder, "- Stack: %s\n", strings.Join(profile.PrimaryStack, ", "))
-	}
-
 	if len(profile.Locations) > 0 {
 		fmt.Fprintf(&builder, "- Locations: %s\n", strings.Join(profile.Locations, ", "))
 	}
 
-	fmt.Fprintf(&builder, "- Work preference: %s\n", profile.RemotePref)
-
 	if profile.SalaryMin > 0 {
 		fmt.Fprintf(&builder, "- Salary floor: %s %d\n", profile.SalaryCurrency, profile.SalaryMin)
-	}
-
-	if profile.WantsToBuild != "" {
-		fmt.Fprintf(&builder, "- Wants to build: %s\n", profile.WantsToBuild)
 	}
 
 	detail, err := s.details.Get(ctx, profile.ID)
