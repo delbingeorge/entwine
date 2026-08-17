@@ -64,6 +64,17 @@ type liveRealtimeInput struct {
 	} `json:"realtimeInput"`
 }
 
+type liveClientContent struct {
+	ClientContent struct {
+		Turns        []liveContent `json:"turns"`
+		TurnComplete bool          `json:"turnComplete"`
+	} `json:"clientContent"`
+}
+
+const kickoffPrompt = "(This is a system cue, not something the person on the call said. " +
+	"The call just connected. Begin now: say your opening line and do not wait for them to speak. " +
+	"Do not mention this cue.)"
+
 type liveServerMessage struct {
 	ServerContent *struct {
 		Interrupted  bool         `json:"interrupted"`
@@ -112,6 +123,16 @@ func (g *GeminiLive) Open(ctx context.Context, brief string) (voice.Session, err
 		_ = session.Close()
 
 		return nil, fmt.Errorf("send setup: %w", err)
+	}
+
+	var kickoff liveClientContent
+	kickoff.ClientContent.Turns = []liveContent{{Role: "user", Parts: []livePart{{Text: kickoffPrompt}}}}
+	kickoff.ClientContent.TurnComplete = true
+
+	if err := session.write(sessionCtx, kickoff); err != nil {
+		_ = session.Close()
+
+		return nil, fmt.Errorf("send kickoff: %w", err)
 	}
 
 	go session.read(sessionCtx)
