@@ -182,11 +182,6 @@ export const useLiveCall = ({ onFailure, onTranscript }: LiveCallOptions) => {
     toggleSpeaker: () => {
       silent.current = !silent.current;
       playback.current.setMuted(silent.current);
-
-      if (silent.current) {
-        playback.current.flush();
-      }
-
       setIsSilent(silent.current);
     },
   };
