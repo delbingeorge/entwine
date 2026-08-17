@@ -2,7 +2,8 @@ import { useState } from "react";
 
 import { CatIcon } from "@solar-icons/react/linear/cat";
 
-import { agentName } from "../data";
+import { agentName } from "@/shared/lib/agent";
+
 import { useRiseIn } from "../hooks/use-rise-in";
 import { htmlToText } from "../lib/html-to-text";
 

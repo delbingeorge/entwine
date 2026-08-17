@@ -1,22 +1,14 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 import { useSearch } from "@tanstack/react-router";
 import { gsap } from "gsap";
 import { Flip } from "gsap/Flip";
 
 import { useDisplayName } from "@/shared/hooks/use-display-name";
-import { useMountTransition } from "@/shared/hooks/use-mount-transition";
 import { placeholderFor } from "@/shared/lib/scenarios";
 
-import {
-  CallWidget,
-  playEndSound,
-  playJoinSound,
-  useLiveCall,
-  VoiceCallScreen,
-} from "@/features/voice";
+import { useVoiceCall } from "@/features/voice";
 
-import { agentName } from "../data";
 import { useChat } from "../hooks/use-chat";
 import { useJobThreads } from "../hooks/use-job-threads";
 import { useThreads } from "../hooks/use-threads";
@@ -36,54 +28,16 @@ export const ChatScreen = () => {
   const { thread } = useSearch({ from: "/" });
   const history = useThreads(thread ?? "");
   const name = useDisplayName();
-  const [callState, setCallState] = useState({ caption: "", isOpen: false, startedAt: 0 });
+  const voiceCall = useVoiceCall();
 
   const chat = useChat({
     onSettled: history.syncTitles,
     threadId: history.currentId,
   });
 
-  const call = useLiveCall({
-    onFailure: (message) => {
-      setCallState((state) => ({ ...state, caption: message }));
-    },
-    onTranscript: (text) => {
-      setCallState((state) => ({ ...state, caption: text }));
-    },
-  });
-
   const current = history.threads.find((entry) => entry.id === history.currentId);
   const canCall = current?.kind === "coaching";
 
-  const endCall = () => {
-    playEndSound();
-    call.stop();
-    setCallState({ caption: "", isOpen: false, startedAt: 0 });
-  };
-
-  const callScreen = useMountTransition(callState.isOpen, {
-    hidden: { autoAlpha: 0, scale: 0.985, y: 0 },
-  });
-
-  const callWidget = useMountTransition(!callState.isOpen && callState.startedAt !== 0, {
-    hidden: { autoAlpha: 0, scale: 0.9, y: 12 },
-    origin: "bottom right",
-  });
-
-  const toggleCall = () => {
-    if (callState.startedAt !== 0) {
-      endCall();
-      return;
-    }
-
-    if (history.currentId === null) {
-      return;
-    }
-
-    playJoinSound();
-    setCallState({ caption: "", isOpen: true, startedAt: Date.now() });
-    void call.start(history.currentId);
-  };
   const threads = useJobThreads();
   const isEmpty = chat.turns.length === 0;
   const showIntro = isEmpty && !chat.isLoading;
@@ -130,9 +84,13 @@ export const ChatScreen = () => {
 
   const composer = (
     <ThreadComposer
-      canCall={canCall && callState.startedAt === 0}
+      canCall={canCall && !voiceCall.isActive}
       chat={chat}
-      onJoinCall={toggleCall}
+      onJoinCall={() => {
+        if (history.currentId !== null) {
+          voiceCall.start(history.currentId, current?.title ?? "");
+        }
+      }}
       onSubmit={send}
       placeholder={placeholderFor(canCall, current?.title ?? "")}
     />
@@ -140,42 +98,6 @@ export const ChatScreen = () => {
 
   return (
     <div className="flex h-screen flex-col bg-surface">
-      {callScreen.isMounted ? (
-        <VoiceCallScreen
-          agentName={agentName}
-          getLevel={call.getLevel}
-          caption={callState.caption}
-          isMuted={call.isMuted}
-          isSilent={call.isSilent}
-          onEnd={endCall}
-          onMinimise={() => {
-            setCallState((state) => ({ ...state, isOpen: false }));
-          }}
-          onToggleMute={call.toggleMute}
-          onToggleSpeaker={call.toggleSpeaker}
-          rootRef={callScreen.ref}
-          startedAt={callState.startedAt}
-          status={call.status}
-          topic={current?.title ?? ""}
-        />
-      ) : null}
-
-      {callWidget.isMounted ? (
-        <CallWidget
-          agentName={agentName}
-          isMuted={call.isMuted}
-          isSilent={call.isSilent}
-          onEnd={endCall}
-          onOpen={() => {
-            setCallState((state) => ({ ...state, isOpen: true }));
-          }}
-          onToggleMute={call.toggleMute}
-          onToggleSpeaker={call.toggleSpeaker}
-          rootRef={callWidget.ref}
-          startedAt={callState.startedAt}
-          status={call.status}
-        />
-      ) : null}
       <ChatHeader
         currentThreadId={history.currentId}
         canStartNew={canStartNew}

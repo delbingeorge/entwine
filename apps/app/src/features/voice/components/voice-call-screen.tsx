@@ -58,7 +58,7 @@ export const VoiceCallScreen = ({
             type="button"
           >
             <LucideIcon className="size-3.5 shrink-0" name="chevron-left" />
-            Back to chat
+            Minimise
           </button>
           <span className="min-w-0 truncate text-[13px] text-composer-ink">{topic}</span>
         </div>
