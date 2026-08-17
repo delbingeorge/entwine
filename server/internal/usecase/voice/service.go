@@ -26,6 +26,7 @@ type Opener interface {
 
 type ThreadReader interface {
 	Get(ctx context.Context, threadID, userID string) (domain.Thread, error)
+	Messages(ctx context.Context, threadID string) ([]domain.ChatMessage, error)
 }
 
 type Service struct {
@@ -43,7 +44,12 @@ func (s *Service) Start(ctx context.Context, userID, threadID string) (Session, 
 		return nil, fmt.Errorf("get thread: %w", err)
 	}
 
-	session, err := s.opener.Open(ctx, spokenBrief(thread))
+	messages, err := s.threads.Messages(ctx, threadID)
+	if err != nil {
+		return nil, fmt.Errorf("read history: %w", err)
+	}
+
+	session, err := s.opener.Open(ctx, spokenBrief(thread, messages))
 	if err != nil {
 		return nil, fmt.Errorf("open voice session: %w", err)
 	}

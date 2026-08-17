@@ -27,7 +27,14 @@ const spokenRoleplay = `
 This is a practice session: %s.
 Play the other side of that conversation and stay in role. If the scenario needs something you were not given, like a number or a job detail, ask for it before you invent one. After they answer, give one short note on what to change, then continue.`
 
-func spokenBrief(thread domain.Thread) string {
+const spokenHistory = `
+
+Before this call, they wrote this in text chat. Treat it as real, it came from them:
+%s`
+
+const historyDepth = 20
+
+func spokenBrief(thread domain.Thread, messages []domain.ChatMessage) string {
 	var builder strings.Builder
 
 	builder.WriteString(spokenBase)
@@ -43,5 +50,29 @@ func spokenBrief(thread domain.Thread) string {
 
 	fmt.Fprintf(&builder, spokenRoleplay, scenario)
 
+	if history := formatHistory(messages); history != "" {
+		fmt.Fprintf(&builder, spokenHistory, history)
+	}
+
 	return builder.String()
+}
+
+func formatHistory(messages []domain.ChatMessage) string {
+	if len(messages) > historyDepth {
+		messages = messages[len(messages)-historyDepth:]
+	}
+
+	lines := make([]string, 0, len(messages))
+
+	for _, message := range messages {
+		line := fmt.Sprintf("%s: %s", message.Role, message.Content)
+
+		if message.Attachment != nil {
+			line += fmt.Sprintf(" (attached: %s)", message.Attachment.Name)
+		}
+
+		lines = append(lines, line)
+	}
+
+	return strings.Join(lines, "\n")
 }
