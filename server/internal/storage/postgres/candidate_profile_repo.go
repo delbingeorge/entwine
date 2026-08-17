@@ -88,12 +88,9 @@ func (repo *CandidateProfileRepo) Save(
 		Columns: []clause.Column{{Name: "user_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{
 			"seniority",
-			"primary_stack",
 			"locations",
-			"remote_pref",
 			"salary_expectation_min",
 			"salary_currency",
-			"wants_to_build",
 			"status",
 			"updated_at",
 		}),
