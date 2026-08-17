@@ -20,10 +20,17 @@ type threadResponse struct {
 }
 
 type messageResponse struct {
-	ID        string    `json:"id"`
-	Role      string    `json:"role"`
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID         string              `json:"id"`
+	Role       string              `json:"role"`
+	Content    string              `json:"content"`
+	Attachment *attachmentResponse `json:"attachment,omitempty"`
+	CreatedAt  time.Time           `json:"createdAt"`
+}
+
+type attachmentResponse struct {
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+	Size string `json:"size"`
 }
 
 type newThreadRequest struct {
@@ -123,12 +130,22 @@ func handleThreadMessages(logger *slog.Logger, chats ChatService) http.HandlerFu
 
 		response := make([]messageResponse, 0, len(messages))
 		for _, message := range messages {
-			response = append(response, messageResponse{
+			item := messageResponse{
 				ID:        message.ID,
 				Role:      string(message.Role),
 				Content:   message.Content,
 				CreatedAt: message.CreatedAt,
-			})
+			}
+
+			if message.Attachment != nil {
+				item.Attachment = &attachmentResponse{
+					Kind: message.Attachment.Kind,
+					Name: message.Attachment.Name,
+					Size: message.Attachment.Size,
+				}
+			}
+
+			response = append(response, item)
 		}
 
 		writeJSON(ctx, logger, w, http.StatusOK, response)

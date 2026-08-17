@@ -12,6 +12,7 @@ import (
 
 	"github.com/octane/entwine/server/internal/domain"
 	transporthttp "github.com/octane/entwine/server/internal/transport/http"
+	"github.com/octane/entwine/server/internal/usecase/chat"
 	"github.com/octane/entwine/server/internal/usecase/profile"
 	"github.com/octane/entwine/server/internal/usecase/voice"
 )
@@ -84,7 +85,9 @@ func (f *fakeChats) DeleteThread(_ context.Context, _, _ string) error {
 	return nil
 }
 
-func (f *fakeChats) Reply(_ context.Context, _, _, _ string, _ func(string) error) error {
+func (f *fakeChats) Reply(
+	_ context.Context, _, _, _ string, _ *chat.Attachment, _ func(string) error,
+) error {
 	return nil
 }
 

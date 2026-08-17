@@ -78,7 +78,7 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threadId]);
 
-  const respond = async (owner: string, text: string) => {
+  const respond = async (owner: string, text: string, sentAttachment: Attachment | null) => {
     const opened = openedAt.current;
     const isShowing = () => openedAt.current === opened;
     const write = (update: (current: Turn[]) => Turn[]) => {
@@ -114,6 +114,10 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
         text,
         threadId: owner,
         signal: controller.signal,
+        attachment:
+          sentAttachment === null
+            ? null
+            : { kind: sentAttachment.kind, name: sentAttachment.name, size: sentAttachment.size },
         onToken: (token) => {
           markdown += token;
 
@@ -222,7 +226,7 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
     setValue("");
     setAttachment(null);
     setEditing(null);
-    void respond(threadId, asked);
+    void respond(threadId, asked, sent);
   };
 
   return {

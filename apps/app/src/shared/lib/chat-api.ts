@@ -2,7 +2,14 @@ import { AppError } from "./api-client";
 import { env } from "./env";
 import { getSession } from "./session";
 
+interface ChatAttachment {
+  kind: "pdf" | "text" | "code" | "image";
+  name: string;
+  size: string;
+}
+
 interface StreamOptions {
+  attachment?: ChatAttachment | null;
   onToken: (token: string) => void;
   signal?: AbortSignal;
   text: string;
@@ -26,7 +33,13 @@ const decodeEvent = (block: string) => {
   }
 };
 
-export const streamChat = async ({ onToken, signal, text, threadId }: StreamOptions) => {
+export const streamChat = async ({
+  attachment,
+  onToken,
+  signal,
+  text,
+  threadId,
+}: StreamOptions) => {
   const session = await getSession();
 
   if (session === null) {
@@ -39,7 +52,7 @@ export const streamChat = async ({ onToken, signal, text, threadId }: StreamOpti
       "Content-Type": "application/json",
       Authorization: `Bearer ${session.access_token}`,
     },
-    body: JSON.stringify({ threadId, text }),
+    body: JSON.stringify({ threadId, text, attachment: attachment ?? null }),
     signal,
   });
 

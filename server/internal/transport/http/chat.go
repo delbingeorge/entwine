@@ -19,14 +19,30 @@ type ChatService interface {
 	ListThreads(ctx context.Context, userID string) ([]domain.Thread, error)
 	History(ctx context.Context, threadID, userID string) ([]domain.ChatMessage, error)
 	DeleteThread(ctx context.Context, threadID, userID string) error
-	Reply(ctx context.Context, userID, threadID, text string, emit func(string) error) error
+	Reply(
+		ctx context.Context, userID, threadID, text string, attachment *chat.Attachment, emit func(string) error,
+	) error
 }
 
 const maxChatBody = 1 << 18
 
+var knownAttachmentKinds = map[string]bool{
+	"pdf":   true,
+	"text":  true,
+	"code":  true,
+	"image": true,
+}
+
+type chatAttachmentRequest struct {
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+	Size string `json:"size"`
+}
+
 type chatRequest struct {
-	ThreadID string `json:"threadId"`
-	Text     string `json:"text"`
+	ThreadID   string                 `json:"threadId"`
+	Text       string                 `json:"text"`
+	Attachment *chatAttachmentRequest `json:"attachment"`
 }
 
 func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
@@ -77,6 +93,20 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 			return
 		}
 
+		if request.Attachment != nil && (!knownAttachmentKinds[request.Attachment.Kind] ||
+			strings.TrimSpace(request.Attachment.Name) == "" ||
+			strings.TrimSpace(request.Attachment.Size) == "") {
+			writeError(
+				ctx,
+				logger,
+				w,
+				http.StatusBadRequest,
+				"invalid_body",
+				"attachment is invalid",
+			)
+			return
+		}
+
 		flusher, canFlush := w.(http.Flusher)
 		if !canFlush {
 			writeError(
@@ -115,11 +145,22 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 			return nil
 		}
 
+		var attachment *chat.Attachment
+
+		if request.Attachment != nil {
+			attachment = &chat.Attachment{
+				Kind: request.Attachment.Kind,
+				Name: request.Attachment.Name,
+				Size: request.Attachment.Size,
+			}
+		}
+
 		if err := chats.Reply(
 			ctx,
 			current.user.ID,
 			request.ThreadID,
 			request.Text,
+			attachment,
 			emit,
 		); err != nil {
 			logger.ErrorContext(ctx, "chat reply", slog.Any("error", err))

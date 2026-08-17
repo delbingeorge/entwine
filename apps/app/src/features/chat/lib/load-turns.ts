@@ -9,7 +9,15 @@ export const loadTurns = async (threadId: string): Promise<Turn[]> => {
 
   return stored.map((message, index) =>
     message.role === "user"
-      ? { id: index + 1, role: "user", text: message.content, attachment: null }
+      ? {
+          id: index + 1,
+          role: "user",
+          text: message.content,
+          attachment:
+            message.attachment === undefined
+              ? null
+              : { id: index + 1, ...message.attachment },
+        }
       : { id: index + 1, role: "agent", html: renderMarkdown(message.content), isStreaming: false },
   );
 };

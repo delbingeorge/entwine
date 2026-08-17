@@ -11,10 +11,17 @@ const threadSchema = z.object({
   createdAt: z.string(),
 });
 
+const attachmentSchema = z.object({
+  kind: z.enum(["pdf", "text", "code", "image"]),
+  name: z.string(),
+  size: z.string(),
+});
+
 const messageSchema = z.object({
   id: z.string(),
   role: z.enum(["agent", "user"]),
   content: z.string(),
+  attachment: attachmentSchema.optional(),
   createdAt: z.string(),
 });
 

@@ -26,12 +26,15 @@ type threadRow struct {
 func (threadRow) TableName() string { return "chat_threads" }
 
 type messageRow struct {
-	ID        string    `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid()"`
-	ThreadID  string    `gorm:"column:thread_id;type:uuid"`
-	Seq       int64     `gorm:"column:seq"`
-	Role      string    `gorm:"column:role"`
-	Content   string    `gorm:"column:content"`
-	CreatedAt time.Time `gorm:"column:created_at"`
+	ID             string    `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid()"`
+	ThreadID       string    `gorm:"column:thread_id;type:uuid"`
+	Seq            int64     `gorm:"column:seq"`
+	Role           string    `gorm:"column:role"`
+	Content        string    `gorm:"column:content"`
+	AttachmentKind *string   `gorm:"column:attachment_kind"`
+	AttachmentName *string   `gorm:"column:attachment_name"`
+	AttachmentSize *string   `gorm:"column:attachment_size"`
+	CreatedAt      time.Time `gorm:"column:created_at"`
 }
 
 func (messageRow) TableName() string { return "chat_messages" }
@@ -133,14 +136,7 @@ func (r *ThreadRepo) Messages(ctx context.Context, threadID string) ([]domain.Ch
 
 	messages := make([]domain.ChatMessage, 0, len(rows))
 	for _, row := range rows {
-		messages = append(messages, domain.ChatMessage{
-			ID:        row.ID,
-			ThreadID:  row.ThreadID,
-			Seq:       row.Seq,
-			Role:      domain.MessageRole(row.Role),
-			Content:   row.Content,
-			CreatedAt: row.CreatedAt,
-		})
+		messages = append(messages, row.toDomain())
 	}
 
 	return messages, nil
@@ -167,6 +163,12 @@ func (r *ThreadRepo) Append(
 			Role:      string(message.Role),
 			Content:   message.Content,
 			CreatedAt: now,
+		}
+
+		if message.Attachment != nil {
+			stored.AttachmentKind = nullableString(message.Attachment.Kind)
+			stored.AttachmentName = nullableString(message.Attachment.Name)
+			stored.AttachmentSize = nullableString(message.Attachment.Size)
 		}
 
 		if err := tx.Create(&stored).Error; err != nil {
@@ -196,14 +198,28 @@ func (r *ThreadRepo) Append(
 		return domain.ChatMessage{}, err
 	}
 
-	return domain.ChatMessage{
-		ID:        stored.ID,
-		ThreadID:  stored.ThreadID,
-		Seq:       stored.Seq,
-		Role:      domain.MessageRole(stored.Role),
-		Content:   stored.Content,
-		CreatedAt: stored.CreatedAt,
-	}, nil
+	return stored.toDomain(), nil
+}
+
+func (r messageRow) toDomain() domain.ChatMessage {
+	message := domain.ChatMessage{
+		ID:        r.ID,
+		ThreadID:  r.ThreadID,
+		Seq:       r.Seq,
+		Role:      domain.MessageRole(r.Role),
+		Content:   r.Content,
+		CreatedAt: r.CreatedAt,
+	}
+
+	if r.AttachmentKind != nil && r.AttachmentName != nil && r.AttachmentSize != nil {
+		message.Attachment = &domain.ChatAttachment{
+			Kind: *r.AttachmentKind,
+			Name: *r.AttachmentName,
+			Size: *r.AttachmentSize,
+		}
+	}
+
+	return message
 }
 
 func (r threadRow) toDomain() domain.Thread {

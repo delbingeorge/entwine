@@ -18,6 +18,12 @@ type Message struct {
 	Text string
 }
 
+type Attachment struct {
+	Kind string
+	Name string
+	Size string
+}
+
 type Responder interface {
 	Stream(ctx context.Context, system string, messages []Message, emit func(string) error) error
 }
@@ -114,17 +120,27 @@ func (s *Service) DeleteThread(ctx context.Context, threadID, userID string) err
 }
 
 func (s *Service) Reply(
-	ctx context.Context, userID, threadID, text string, emit func(string) error,
+	ctx context.Context, userID, threadID, text string, attachment *Attachment, emit func(string) error,
 ) error {
 	thread, err := s.threads.Get(ctx, threadID, userID)
 	if err != nil {
 		return fmt.Errorf("get thread: %w", err)
 	}
 
+	var chatAttachment *domain.ChatAttachment
+
+	if attachment != nil {
+		chatAttachment, err = domain.NewChatAttachment(attachment.Kind, attachment.Name, attachment.Size)
+		if err != nil {
+			return err
+		}
+	}
+
 	asked, err := domain.NewChatMessage(domain.ChatMessage{
-		ThreadID: threadID,
-		Role:     domain.MessageRoleUser,
-		Content:  text,
+		ThreadID:   threadID,
+		Role:       domain.MessageRoleUser,
+		Content:    text,
+		Attachment: chatAttachment,
 	})
 	if err != nil {
 		return err

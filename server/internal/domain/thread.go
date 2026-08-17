@@ -33,12 +33,19 @@ type Thread struct {
 }
 
 type ChatMessage struct {
-	ID        string
-	ThreadID  string
-	Seq       int64
-	Role      MessageRole
-	Content   string
-	CreatedAt time.Time
+	ID         string
+	ThreadID   string
+	Seq        int64
+	Role       MessageRole
+	Content    string
+	Attachment *ChatAttachment
+	CreatedAt  time.Time
+}
+
+type ChatAttachment struct {
+	Kind string
+	Name string
+	Size string
 }
 
 const maxTitleRunes = 60
@@ -82,6 +89,29 @@ func NewChatMessage(message ChatMessage) (ChatMessage, error) {
 	}
 
 	return message, nil
+}
+
+var knownAttachmentKinds = map[string]bool{
+	"pdf":   true,
+	"text":  true,
+	"code":  true,
+	"image": true,
+}
+
+func NewChatAttachment(kind, name, size string) (*ChatAttachment, error) {
+	if !knownAttachmentKinds[kind] {
+		return nil, fmt.Errorf("attachment kind %q is unknown: %w", kind, ErrInvalidProfile)
+	}
+
+	if strings.TrimSpace(name) == "" {
+		return nil, fmt.Errorf("attachment name is empty: %w", ErrInvalidProfile)
+	}
+
+	if strings.TrimSpace(size) == "" {
+		return nil, fmt.Errorf("attachment size is empty: %w", ErrInvalidProfile)
+	}
+
+	return &ChatAttachment{Kind: kind, Name: name, Size: size}, nil
 }
 
 func TitleFrom(text string) string {
