@@ -35,6 +35,7 @@ type ThreadRepository interface {
 	Delete(ctx context.Context, threadID, userID string) error
 	Messages(ctx context.Context, threadID string) ([]domain.ChatMessage, error)
 	Append(ctx context.Context, message domain.ChatMessage, now time.Time) (domain.ChatMessage, error)
+	DeleteFrom(ctx context.Context, threadID, messageID string) error
 }
 
 type ProfileReader interface {
@@ -120,11 +121,18 @@ func (s *Service) DeleteThread(ctx context.Context, threadID, userID string) err
 }
 
 func (s *Service) Reply(
-	ctx context.Context, userID, threadID, text string, attachment *Attachment, emit func(string) error,
+	ctx context.Context, userID, threadID, text string, attachment *Attachment,
+	editMessageID *string, onUserMessage func(string) error, emit func(string) error,
 ) error {
 	thread, err := s.threads.Get(ctx, threadID, userID)
 	if err != nil {
 		return fmt.Errorf("get thread: %w", err)
+	}
+
+	if editMessageID != nil {
+		if err := s.threads.DeleteFrom(ctx, threadID, *editMessageID); err != nil {
+			return fmt.Errorf("delete edited history: %w", err)
+		}
 	}
 
 	var chatAttachment *domain.ChatAttachment
@@ -146,8 +154,13 @@ func (s *Service) Reply(
 		return err
 	}
 
-	if _, err := s.threads.Append(ctx, asked, s.now()); err != nil {
+	storedAsked, err := s.threads.Append(ctx, asked, s.now())
+	if err != nil {
 		return fmt.Errorf("store question: %w", err)
+	}
+
+	if err := onUserMessage(storedAsked.ID); err != nil {
+		return fmt.Errorf("notify stored message: %w", err)
 	}
 
 	stored, err := s.threads.Messages(ctx, threadID)

@@ -1,22 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 
-import { AppError } from "@/shared/lib/api-client";
-import { streamChat } from "@/shared/lib/chat-api";
-
-import { escapeHtml } from "../lib/escape-html";
 import { loadTurns } from "../lib/load-turns";
-import { renderMarkdown } from "../lib/render-markdown";
-import { createReveal } from "../lib/reveal";
+
+import { useRespond } from "./use-respond";
 
 import type { Attachment, Turn, UserTurn } from "../types";
+import type { Running } from "./use-respond";
 
 interface ConversationOptions {
   onSettled?: () => void;
   seed: Turn[];
   threadId: string | null;
 }
-
-type Running = { controller: AbortController; reveal: ReturnType<typeof createReveal> };
 
 export const useConversation = ({ onSettled, seed, threadId }: ConversationOptions) => {
   const [turns, setTurns] = useState<Turn[]>(seed);
@@ -78,107 +73,15 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threadId]);
 
-  const respond = async (owner: string, text: string, sentAttachment: Attachment | null) => {
-    const opened = openedAt.current;
-    const isShowing = () => openedAt.current === opened;
-    const write = (update: (current: Turn[]) => Turn[]) => {
-      if (isShowing()) {
-        setTurns(update);
-      }
-    };
-
-    setBusyThreads((current) => [...current, owner]);
-
-    const thinkingId = nextId.current++;
-    write((current) => [...current, { id: thinkingId, role: "thinking" }]);
-
-    const agentId = nextId.current++;
-    let markdown = "";
-    let hasStarted = false;
-
-    const reveal = createReveal((count) => {
-      write((current) =>
-        current.map((turn) =>
-          turn.id === agentId && turn.role === "agent"
-            ? { ...turn, html: renderMarkdown(markdown.slice(0, count)) }
-            : turn,
-        ),
-      );
-    });
-
-    const controller = new AbortController();
-    running.current.set(owner, { controller, reveal });
-
-    try {
-      await streamChat({
-        text,
-        threadId: owner,
-        signal: controller.signal,
-        attachment:
-          sentAttachment === null
-            ? null
-            : { kind: sentAttachment.kind, name: sentAttachment.name, size: sentAttachment.size },
-        onToken: (token) => {
-          markdown += token;
-
-          if (!hasStarted) {
-            hasStarted = true;
-            write((current) => [
-              ...current.filter((turn) => turn.id !== thinkingId),
-              { id: agentId, role: "agent", html: "", isStreaming: true },
-            ]);
-          }
-
-          reveal.to(markdown.length);
-        },
-      });
-
-      await reveal.settle(markdown.length);
-
-      write((current) =>
-        current
-          .filter((turn) => turn.id !== thinkingId)
-          .map((turn) =>
-            turn.id === agentId && turn.role === "agent" ? { ...turn, isStreaming: false } : turn,
-          ),
-      );
-    } catch (cause) {
-      reveal.kill();
-
-      if (!controller.signal.aborted) {
-        console.error("chat failed", cause);
-
-        const reason =
-          cause instanceof AppError ? cause.message : "I could not answer just now. Try again.";
-
-        write((current) => [
-          ...current.filter((turn) => turn.id !== thinkingId && turn.id !== agentId),
-          {
-            id: nextId.current++,
-            role: "agent",
-            html: `<p>${escapeHtml(reason)}</p>`,
-            isStreaming: false,
-          },
-        ]);
-      }
-    } finally {
-      running.current.delete(owner);
-      setBusyThreads((current) => current.filter((id) => id !== owner));
-      onSettled?.();
-
-      if (!isShowing() && owner === threadIdRef.current) {
-        loadTurns(owner)
-          .then((stored) => {
-            if (owner === threadIdRef.current) {
-              setTurns(stored);
-            }
-          })
-          .catch((cause: unknown) => {
-            console.error("could not load this chat", cause);
-          });
-      }
-    }
-  };
+  const respond = useRespond({
+    nextId,
+    onSettled,
+    openedAt,
+    running,
+    setBusyThreads,
+    setTurns,
+    threadIdRef,
+  });
 
   const stop = () => {
     if (threadId === null) {
@@ -219,14 +122,27 @@ export const useConversation = ({ onSettled, seed, threadId }: ConversationOptio
     const sent = attachment;
     const asked = text === "" ? `Shared ${sent?.name ?? "a file"}` : text;
 
-    setTurns((current) => [
-      ...current,
-      { id: nextId.current++, role: "user", text: asked, attachment: sent },
-    ]);
+    const editedId = editing;
+    const editedTurn =
+      editedId === null
+        ? undefined
+        : turns.find(
+            (turn): turn is UserTurn => turn.id === editedId && turn.role === "user",
+          );
+    const editMessageId = editedTurn?.serverId ?? null;
+
+    const userTurnId = nextId.current++;
+
+    setTurns((current) => {
+      const cutIndex = editedId === null ? -1 : current.findIndex((turn) => turn.id === editedId);
+      const base = cutIndex === -1 ? current : current.slice(0, cutIndex);
+
+      return [...base, { id: userTurnId, role: "user", text: asked, attachment: sent }];
+    });
     setValue("");
     setAttachment(null);
     setEditing(null);
-    void respond(threadId, asked, sent);
+    void respond(threadId, asked, sent, userTurnId, editMessageId);
   };
 
   return {

@@ -20,7 +20,8 @@ type ChatService interface {
 	History(ctx context.Context, threadID, userID string) ([]domain.ChatMessage, error)
 	DeleteThread(ctx context.Context, threadID, userID string) error
 	Reply(
-		ctx context.Context, userID, threadID, text string, attachment *chat.Attachment, emit func(string) error,
+		ctx context.Context, userID, threadID, text string, attachment *chat.Attachment,
+		editMessageID *string, onUserMessage func(string) error, emit func(string) error,
 	) error
 }
 
@@ -40,9 +41,10 @@ type chatAttachmentRequest struct {
 }
 
 type chatRequest struct {
-	ThreadID   string                 `json:"threadId"`
-	Text       string                 `json:"text"`
-	Attachment *chatAttachmentRequest `json:"attachment"`
+	ThreadID      string                 `json:"threadId"`
+	Text          string                 `json:"text"`
+	Attachment    *chatAttachmentRequest `json:"attachment"`
+	EditMessageID *string                `json:"editMessageId"`
 }
 
 func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
@@ -145,6 +147,24 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 			return nil
 		}
 
+		onUserMessage := func(id string) error {
+			payload, err := json.Marshal(map[string]string{
+				"id": id,
+			})
+			if err != nil {
+				return err
+			}
+
+			if _, err := w.Write(
+				[]byte("event: message\ndata: " + string(payload) + "\n\n"),
+			); err != nil {
+				return err
+			}
+
+			flusher.Flush()
+			return nil
+		}
+
 		var attachment *chat.Attachment
 
 		if request.Attachment != nil {
@@ -161,6 +181,8 @@ func handleChat(logger *slog.Logger, chats ChatService) http.HandlerFunc {
 			request.ThreadID,
 			request.Text,
 			attachment,
+			request.EditMessageID,
+			onUserMessage,
 			emit,
 		); err != nil {
 			logger.ErrorContext(ctx, "chat reply", slog.Any("error", err))

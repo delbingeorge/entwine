@@ -142,6 +142,29 @@ func (r *ThreadRepo) Messages(ctx context.Context, threadID string) ([]domain.Ch
 	return messages, nil
 }
 
+func (r *ThreadRepo) DeleteFrom(ctx context.Context, threadID, messageID string) error {
+	var target messageRow
+
+	err := r.db.WithContext(ctx).
+		Where("id = ? and thread_id = ?", messageID, threadID).
+		First(&target).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("message %s: %w", messageID, domain.ErrNotFound)
+	}
+
+	if err != nil {
+		return fmt.Errorf("find message: %w", err)
+	}
+
+	if err := r.db.WithContext(ctx).
+		Where("thread_id = ? and seq >= ?", threadID, target.Seq).
+		Delete(&messageRow{}).Error; err != nil {
+		return fmt.Errorf("delete messages: %w", err)
+	}
+
+	return nil
+}
+
 func (r *ThreadRepo) Append(
 	ctx context.Context, message domain.ChatMessage, now time.Time,
 ) (domain.ChatMessage, error) {

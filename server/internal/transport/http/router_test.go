@@ -86,7 +86,8 @@ func (f *fakeChats) DeleteThread(_ context.Context, _, _ string) error {
 }
 
 func (f *fakeChats) Reply(
-	_ context.Context, _, _, _ string, _ *chat.Attachment, _ func(string) error,
+	_ context.Context, _, _, _ string, _ *chat.Attachment,
+	_ *string, _ func(string) error, _ func(string) error,
 ) error {
 	return nil
 }

@@ -12,6 +12,7 @@ export const loadTurns = async (threadId: string): Promise<Turn[]> => {
       ? {
           id: index + 1,
           role: "user",
+          serverId: message.id,
           text: message.content,
           attachment:
             message.attachment === undefined

@@ -10,6 +10,8 @@ interface ChatAttachment {
 
 interface StreamOptions {
   attachment?: ChatAttachment | null;
+  editMessageId?: string | null;
+  onMessage?: (id: string) => void;
   onToken: (token: string) => void;
   signal?: AbortSignal;
   text: string;
@@ -27,7 +29,7 @@ const decodeEvent = (block: string) => {
   }
 
   try {
-    return JSON.parse(dataLines.join("")) as { message?: string; text?: string };
+    return JSON.parse(dataLines.join("")) as { id?: string; message?: string; text?: string };
   } catch {
     return null;
   }
@@ -35,6 +37,8 @@ const decodeEvent = (block: string) => {
 
 export const streamChat = async ({
   attachment,
+  editMessageId,
+  onMessage,
   onToken,
   signal,
   text,
@@ -52,7 +56,12 @@ export const streamChat = async ({
       "Content-Type": "application/json",
       Authorization: `Bearer ${session.access_token}`,
     },
-    body: JSON.stringify({ threadId, text, attachment: attachment ?? null }),
+    body: JSON.stringify({
+      threadId,
+      text,
+      attachment: attachment ?? null,
+      editMessageId: editMessageId ?? null,
+    }),
     signal,
   });
 
@@ -94,6 +103,16 @@ export const streamChat = async ({
         const payload = decodeEvent(block);
 
         throw new AppError("chat_failed", payload?.message ?? "Ellie stopped early.", 502);
+      }
+
+      if (block.startsWith("event: message")) {
+        const payload = decodeEvent(block);
+
+        if (payload?.id !== undefined) {
+          onMessage?.(payload.id);
+        }
+
+        continue;
       }
 
       const payload = decodeEvent(block);

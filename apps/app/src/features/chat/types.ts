@@ -34,6 +34,7 @@ export interface UserTurn {
   attachment: Attachment | null;
   id: number;
   role: "user";
+  serverId?: string;
   text: string;
 }
 
