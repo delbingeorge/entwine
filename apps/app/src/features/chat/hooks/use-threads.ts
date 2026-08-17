@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useNavigate } from "@tanstack/react-router";
+
 import {
   createThread,
   deleteThread,
@@ -8,13 +10,16 @@ import {
 } from "@/shared/lib/thread-api";
 
 export const useThreads = (requestedId: string) => {
+  const navigate = useNavigate();
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
-  const [currentId, setCurrentId] = useState<string | null>(null);
-  const currentRef = useRef<string | null>(null);
+  const isResolving = useRef(false);
 
-  useEffect(() => {
-    currentRef.current = currentId;
-  }, [currentId]);
+  const open = useCallback(
+    (id: string, replace = false) => {
+      void navigate({ replace, search: { thread: id }, to: "/" });
+    },
+    [navigate],
+  );
 
   const refresh = useCallback(async () => {
     const listed = await listThreads();
@@ -23,85 +28,81 @@ export const useThreads = (requestedId: string) => {
     return listed;
   }, []);
 
+  const openNewest = useCallback(
+    async (listed: ThreadSummary[]) => {
+      const newest = listed[0];
+
+      if (newest !== undefined) {
+        open(newest.id, true);
+
+        return;
+      }
+
+      const created = await createThread();
+      setThreads([created]);
+      open(created.id, true);
+    },
+    [open],
+  );
+
+  const isKnown = threads.some((thread) => thread.id === requestedId);
+
   useEffect(() => {
+    if (isKnown || isResolving.current) {
+      return;
+    }
+
+    isResolving.current = true;
+
     refresh()
       .then(async (listed) => {
-        const requested = listed.find((thread) => thread.id === requestedId);
-
-        if (requested !== undefined) {
-          setCurrentId(requested.id);
-          return;
+        if (!listed.some((thread) => thread.id === requestedId)) {
+          await openNewest(listed);
         }
-
-        const newest = listed[0];
-
-        if (newest !== undefined) {
-          setCurrentId(newest.id);
-          return;
-        }
-
-        const created = await createThread();
-        setThreads([created]);
-        setCurrentId(created.id);
       })
       .catch((cause: unknown) => {
         console.error("could not load your chats", cause);
+      })
+      .finally(() => {
+        isResolving.current = false;
       });
-  }, [refresh, requestedId]);
+  }, [isKnown, openNewest, refresh, requestedId]);
+
+  const openFresh = () => {
+    createThread()
+      .then(async (created) => {
+        open(created.id);
+        await refresh();
+      })
+      .catch((cause: unknown) => {
+        console.error("could not start a new chat", cause);
+      });
+  };
 
   return {
-    currentId,
-    remove: (id: string) => {
-      deleteThread(id)
-        .then(refresh)
-        .then(async (listed) => {
-          if (currentRef.current !== id) {
-            return;
-          }
-
-          const next = listed[0];
-
-          if (next !== undefined) {
-            setCurrentId(next.id);
-            return;
-          }
-
-          const created = await createThread();
-          setThreads([created]);
-          setCurrentId(created.id);
-        })
-        .catch((cause: unknown) => {
-          console.error("could not delete that chat", cause);
-        });
-    },
+    currentId: isKnown ? requestedId : null,
     leaveSession: () => {
       const chat = threads.find((thread) => thread.kind !== "coaching");
 
       if (chat !== undefined) {
-        setCurrentId(chat.id);
+        open(chat.id);
+
         return;
       }
 
-      createThread()
-        .then(async (created) => {
-          setCurrentId(created.id);
-          await refresh();
-        })
+      openFresh();
+    },
+    remove: (id: string) => {
+      deleteThread(id)
+        .then(refresh)
         .catch((cause: unknown) => {
-          console.error("could not open your chat", cause);
+          console.error("could not delete that chat", cause);
         });
     },
-    select: setCurrentId,
-    startNew: () => {
-      createThread()
-        .then(async (created) => {
-          setCurrentId(created.id);
-          await refresh();
-        })
-        .catch((cause: unknown) => {
-          console.error("could not start a new chat", cause);
-        });
+    select: (id: string) => {
+      open(id);
     },
+    startNew: openFresh,
     syncTitles: () => {
       refresh().catch(() => {
         return;
