@@ -170,6 +170,13 @@ export const Composer = ({
               </div>
             </div>
           </div>
+
+          {canCall ? (
+            <p className="pt-2 text-center text-[12.5px] leading-relaxed text-composer-soft">
+              Remember, voice calls use whatever's already in this chat, so paste the JD or other
+              details to continue.
+            </p>
+          ) : null}
         </div>
       </div>
     </div>
